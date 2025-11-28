@@ -1,0 +1,40 @@
+{
+  "name": "protogen-01",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Autonomous economic agent with distributed consensus and blockchain integration",
+  "author": "PROTOGEN Team",
+  "license": "PROPRIETARY",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "start": "node --experimental-modules index.tsx",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint . --ext .ts,.tsx",
+    "format": "prettier --write \"**/*.{ts,tsx,json,md}\"",
+    "docker:build": "docker build -t protogen-01:latest .",
+    "docker:run": "docker-compose up -d",
+    "docker:stop": "docker-compose down",
+    "docker:logs": "docker-compose logs -f"
+  },
+  "dependencies": {
+    "@google/genai": "^1.30.0",
+    "@noble/ed25519": "^3.0.0",
+    "@noble/hashes": "^2.0.1",
+    "@types/better-sqlite3": "^7.6.13",
+    "better-sqlite3": "^12.4.6",
+    "lucide-react": "^0.555.0",
+    "multiformats": "^13.4.1",
+    "react": "^19.2.0",
+    "react-dom": "^19.2.0",
+    "viem": "^2.40.3"
+  },
+  "devDependencies": {
+    "@types/node": "^22.14.0",
+    "@vitejs/plugin-react": "^5.0.0",
+    "typescript": "~5.8.2",
+    "vite": "^6.2.0"
+  }
+}

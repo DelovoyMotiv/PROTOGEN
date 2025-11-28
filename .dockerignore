@@ -1,0 +1,46 @@
+# Git
+.git/
+.gitignore
+
+# Dependencies
+node_modules/
+
+# Development files
+.kiro/
+*.md
+!README.md
+!DEPLOYMENT.md
+
+# Environment
+.env
+.env.*
+
+# Data
+data/
+*.db
+*.enc
+
+# Logs
+logs/
+*.log
+
+# Build
+dist/
+build/
+
+# Editor
+.vscode/
+.idea/
+*.swp
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Testing
+coverage/
+.nyc_output/
+
+# Temporary
+*.tmp
+temp_*/

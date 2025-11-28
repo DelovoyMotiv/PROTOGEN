@@ -1,0 +1,5 @@
+{
+  "name": "Protogen-01 Control Plane",
+  "description": "A visual control plane and simulation dashboard for the Protogen-01 Autonomous Agent architecture. It demonstrates the identity management, economic reasoning (via Gemini), and mesh network discovery steps defined in the Anóteros Lógos protocol.",
+  "requestFramePermissions": []
+}

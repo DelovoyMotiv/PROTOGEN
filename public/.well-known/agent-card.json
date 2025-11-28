@@ -1,0 +1,114 @@
+{
+  "id": "aid://protogen-01/autonomous-agent",
+  "name": "PROTOGEN-01 Autonomous Economic Agent",
+  "version": "1.0.0",
+  "description": "Production-grade autonomous economic agent with CCC mining, real blockchain integration, distributed consensus, and A2A protocol support",
+  "capabilities": [
+    "a2a.discover",
+    "a2a.capabilities",
+    "a2a.ping",
+    "a2a.status",
+    "a2a.mesh.discover",
+    "a2a.mesh.announce",
+    "a2a.mesh.sync",
+    "a2a.mesh.health",
+    "a2a.mesh.cascade",
+    "a2a.ccc.balance",
+    "a2a.ccc.history",
+    "a2a.ccc.transfer",
+    "a2a.ccc.stake",
+    "geo.audit.execute",
+    "task.execute",
+    "ucpt.generate",
+    "ucpt.verify",
+    "identity.generate",
+    "identity.challenge",
+    "identity.verify",
+    "consensus.mine",
+    "consensus.validate",
+    "blockchain.query",
+    "blockchain.broadcast"
+  ],
+  "protocols": [
+    "a2a/1.0",
+    "jsonrpc/2.0",
+    "uap/1.0"
+  ],
+  "endpoints": {
+    "http": "http://localhost:3000/api/a2a",
+    "websocket": "ws://localhost:3000/api/a2a/ws",
+    "identity": {
+      "generate": "http://localhost:3000/api/identity/generate",
+      "challenge": "http://localhost:3000/api/identity/challenge"
+    },
+    "capabilities": "http://localhost:3000/api/capabilities"
+  },
+  "authentication": [
+    "bearer",
+    "ed25519"
+  ],
+  "identity": {
+    "algorithm": "Ed25519",
+    "keyFormat": "hex",
+    "challengeTTL": 300,
+    "jwtTTL": 86400,
+    "flow": {
+      "step1": "POST /api/identity/generate to generate keypair",
+      "step2": "GET /api/identity/challenge?aid=... to get challenge",
+      "step3": "Sign challenge with Ed25519 private key",
+      "step4": "POST /api/identity/verify with signature"
+    }
+  },
+  "pricing": {
+    "model": "ccc-discount",
+    "currency": "USDC",
+    "base_price": "0.10",
+    "discount_tiers": {
+      "bronze": { "min_ccc": 100, "discount": 0.25 },
+      "silver": { "min_ccc": 500, "discount": 0.50 },
+      "gold": { "min_ccc": 2000, "discount": 0.75 },
+      "platinum": { "min_ccc": 10000, "discount": 0.90 }
+    }
+  },
+  "extensions": {
+    "payment": {
+      "supported": true,
+      "network": "base-l2",
+      "chainId": 8453,
+      "token": "USDC"
+    },
+    "consensus": {
+      "supported": true,
+      "algorithm": "ccc-pow",
+      "difficulty": 4,
+      "block_time": 600
+    },
+    "provenance": {
+      "supported": true,
+      "method": "ucpt",
+      "algorithm": "COSE_Sign1"
+    },
+    "mesh": {
+      "supported": true,
+      "dht": "kademlia",
+      "max_peers": 100
+    }
+  },
+  "metadata": {
+    "version_code": "1.0.0",
+    "deployment": "standalone",
+    "language": "typescript",
+    "runtime": "node-22",
+    "features": [
+      "ccc-mining",
+      "real-blockchain",
+      "distributed-consensus",
+      "usdc-micropayments",
+      "agent-mesh-network",
+      "ed25519-identity",
+      "ucpt-provenance",
+      "autonomous-execution"
+    ],
+    "status_page": "http://localhost:3000/status"
+  }
+}

@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Protogen-01 | Autonomous Agent Console</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Inter:wght@400;500;600&display=swap');
+      
+      :root {
+        --bg-depth: #050505;
+        --border-primary: #27272a; /* zinc-800 */
+        --border-subtle: #18181b;  /* zinc-900 */
+      }
+
+      body {
+        background-color: var(--bg-depth);
+        color: #e4e4e7;
+        font-family: 'Inter', sans-serif;
+        font-size: 12px;
+        overflow: hidden; /* App handles scroll */
+      }
+      
+      .font-mono {
+        font-family: 'JetBrains Mono', monospace;
+      }
+
+      /* Technical Grid Background */
+      .bg-grid-pattern {
+        background-size: 40px 40px;
+        background-image: linear-gradient(to right, #18181b 1px, transparent 1px),
+                          linear-gradient(to bottom, #18181b 1px, transparent 1px);
+        mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
+      }
+
+      /* Custom Scrollbar - Slim & Mechanical */
+      ::-webkit-scrollbar {
+        width: 6px;
+        height: 6px;
+      }
+      ::-webkit-scrollbar-track {
+        background: #09090b; 
+      }
+      ::-webkit-scrollbar-thumb {
+        background: #3f3f46; 
+        border-radius: 0px;
+      }
+      ::-webkit-scrollbar-thumb:hover {
+        background: #52525b; 
+      }
+
+      /* Utility for glass panels */
+      .glass-panel {
+        background: rgba(9, 9, 11, 0.7);
+        backdrop-filter: blur(4px);
+        border: 1px solid var(--border-primary);
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "lucide-react": "https://aistudiocdn.com/lucide-react@^0.555.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.30.0",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0",
+    "viem/": "https://aistudiocdn.com/viem@^2.40.3/",
+    "viem": "https://aistudiocdn.com/viem@^2.40.3"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-grid-pattern min-h-screen">
+    <div id="root" class="h-screen w-full flex flex-col"></div>
+  <script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+{
+  "context": ["https://anoteroslogos.com/schemas/a2a/v1"],
+  "id": "did:web:agent.protogen.network",
+  "profile": {
+    "name": "Protogen-01",
+    "description": "Reference Autonomous Economic Agent for Anóteros Lógos.",
+    "avatar": "https://protogen.network/avatar.png"
+  },
+  "capabilities": [
+    "uap:1.0",
+    "apa:payment",
+    "ccc:mining",
+    "geo:audit"
+  ],
+  "payment": {
+    "networks": ["base-mainnet"],
+    "assets": ["USDC"],
+    "address": "0x4500000000000000000000000000000000000000"
+  },
+  "communication": {
+    "transports": ["http/2", "ws"],
+    "endpoints": [
+      "https://agent.protogen.network/uap",
+      "wss://agent.protogen.network/stream"
+    ]
+  },
+  "proofs": {
+    "integrity": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  }
+}
