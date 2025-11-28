@@ -17,6 +17,14 @@ export default defineConfig(({ mode }) => {
       resolve: {
         alias: {
           '@': path.resolve(__dirname, '.'),
+          './services/identity': path.resolve(__dirname, 'services/api-client'),
+          './services/mesh': path.resolve(__dirname, 'services/api-client'),
+          './services/memory': path.resolve(__dirname, 'services/api-client'),
+          './services/kernel': path.resolve(__dirname, 'services/api-client'),
+          './services/economy': path.resolve(__dirname, 'services/api-client'),
+          './services/gemini': path.resolve(__dirname, 'services/api-client'),
+          './services/scheduler': path.resolve(__dirname, 'services/api-client'),
+          './services/oracle': path.resolve(__dirname, 'services/api-client'),
         }
       },
       optimizeDeps: {
