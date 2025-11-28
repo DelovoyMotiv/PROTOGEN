@@ -1,7 +1,7 @@
 # PROTOGEN-01 - Autonomous Economic Agent
 
 ![License](https://img.shields.io/badge/License-Proprietary-red.svg)
-![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.5-blue.svg)
 ![Node](https://img.shields.io/badge/node-22.x-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)
 ![React](https://img.shields.io/badge/React-19.2-cyan.svg)
@@ -12,7 +12,7 @@ Autonomous agent implementing cryptographically verifiable provenance, determini
 
 **Production URL:** 
 
-**Codebase:** 59 files | 6,700 lines
+**Codebase:** 41 files | 7,977 lines
 
 ---
 
@@ -26,8 +26,12 @@ Production-grade autonomous agent for decentralized economic coordination. Imple
 - Self-sovereign identity with Ed25519 and EVM dual-key cryptography
 - Finite state machine for lifecycle management with EARNING and CRITICAL_FAILURE states
 - Economic safety mechanisms with autonomous survival mode activation
-- Autonomous earning engine with balance monitoring and task marketplace integration
-- AI-powered decision making via LLM integration
+- Autonomous earning engine with balance monitoring and task execution
+- Task marketplace with DHT-based discovery and A2A protocol integration
+- Dynamic bid strategy with competitive pricing and profit margin enforcement
+- Risk assessment with three-factor security evaluation
+- UCPT proof generation with Ed25519 signatures for task verification
+- Escrow contract integration for trustless payment settlement
 
 **Blockchain Integration Layer**
 - Native Base L2 support with USDC payment processing
@@ -168,7 +172,13 @@ Agent-to-agent protocol message processing. Validates signatures, routes message
 Cryptographic proof token creation. Generates COSE_Sign1 tokens with Ed25519 signatures for task execution proofs.
 
 **Earning Engine**
-Autonomous economic self-sufficiency module. Monitors USDC balance, activates survival mode when below threshold, discovers and evaluates task offers, executes tasks for payment, and manages requester blacklisting.
+Autonomous economic self-sufficiency module. Monitors USDC balance, activates survival mode when below threshold, discovers and evaluates task offers, executes tasks with resource monitoring, generates cryptographic proofs, claims payments from escrow contracts, and manages requester blacklisting.
+
+**Task Executor**
+Production-grade task execution engine with state locking, resource tracking, and malicious payload detection. Delegates to service layer based on task type, generates UCPT proofs with Ed25519 signatures, and handles comprehensive error recovery.
+
+**Escrow Service**
+Base L2 escrow contract integration for trustless payment settlement. Verifies locked funds, encodes UCPT proofs for on-chain submission, simulates transactions before broadcast, and manages payment claims with confirmation tracking.
 
 ### Data Flow
 
@@ -266,6 +276,11 @@ SAFE_THRESHOLD                # USDC balance threshold for exiting earning mode 
 EARNING_CYCLE_INTERVAL        # Task discovery interval in milliseconds (default: 300000)
 MAX_CONSECUTIVE_FAILURES      # Maximum failures before critical state (default: 3)
 BLACKLIST_DURATION            # Requester blacklist duration in milliseconds (default: 86400000)
+MIN_PROFIT_MARGIN             # Minimum profit margin for task acceptance (default: 0.30)
+MAX_TASK_DURATION             # Maximum task execution duration in seconds (default: 1800)
+ESCROW_CONTRACT_ADDRESS       # Base L2 escrow contract address
+MIN_REPUTATION_SCORE          # Minimum requester reputation threshold (default: 30)
+RISK_THRESHOLD                # Maximum acceptable risk score (default: 70)
 ```
 
 **AI Integration**
@@ -327,8 +342,10 @@ The agent tracks:
 - CCC balance and mining hash rate
 - USDC balance and transaction history
 - Earning mode status and balance thresholds
-- Task execution statistics and success rate
-- Connected peer count
+- Task execution statistics with success rate and average profit
+- Resource usage per task execution (CPU time, memory delta)
+- Requester blacklist status and duration
+- Connected peer count and reputation scores
 - Memory and CPU usage
 
 ### Performance
@@ -510,12 +527,23 @@ Proprietary. All rights reserved.
 
 ## Version History
 
+**1.2.5** - Task Execution and Escrow Integration
+- Production-grade task executor with state locking and resource monitoring
+- UCPT proof generation with Ed25519 signatures for task verification
+- Malicious payload detection with automatic requester blacklisting
+- Base L2 escrow contract integration for trustless payment settlement
+- Transaction simulation and gas estimation with safety margins
+- Payment claim workflow with confirmation tracking
+- Metrics tracking with exponential moving average smoothing
+- Full earning cycle implementation from discovery to payment
+
 **1.2.1** - Autonomous Earning Engine
 - Autonomous economic self-sufficiency module
 - Balance monitoring with configurable thresholds
 - Automatic survival mode activation and deactivation
-- Task marketplace integration framework
-- Bid strategy and risk assessment modules
+- Task marketplace with DHT-based discovery
+- Dynamic bid strategy with competitive pricing
+- Three-factor risk assessment system
 - Requester blacklisting mechanism
 - FSM extension with EARNING and CRITICAL_FAILURE states
 
