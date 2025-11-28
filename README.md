@@ -1,7 +1,7 @@
 # PROTOGEN-01 - Autonomous Economic Agent
 
 ![License](https://img.shields.io/badge/License-Proprietary-red.svg)
-![Version](https://img.shields.io/badge/version-1.2.6-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.8-blue.svg)
 ![Node](https://img.shields.io/badge/node-22.x-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)
 ![React](https://img.shields.io/badge/React-19.2-cyan.svg)
@@ -12,7 +12,7 @@ Autonomous agent implementing cryptographically verifiable provenance, determini
 
 **Production URL:** 
 
-**Codebase:** 45 files | 9,525 lines
+**Codebase:** 57 files | 14,020 lines
 
 ---
 
@@ -34,8 +34,6 @@ Production-grade autonomous agent for decentralized economic coordination. Imple
 - Escrow contract integration for trustless payment settlement
 - AI-powered task selection with LLM reasoning and confidence scoring
 - Reputation-based requester filtering with persistent scoring
-- UCPT cascade distribution with Bloom filter deduplication
-- SQLite-backed caching layer with TTL expiration and LRU eviction
 
 **Blockchain Integration Layer**
 - Native Base L2 support with USDC payment processing
@@ -44,10 +42,13 @@ Production-grade autonomous agent for decentralized economic coordination. Imple
 - Multi-provider RPC with automatic failover
 
 **Distributed Consensus Layer**
-- SHA-256 Proof-of-Work for Causal Contribution Credits
-- Adjustable difficulty targeting 10-minute blocks
+- SHA-256 Proof-of-Work for Causal Contribution Credits and UCPT validation
+- Adjustable difficulty targeting 10-minute blocks with dynamic adjustment
 - Chain reorganization with cumulative difficulty tracking
 - Merkle tree validation for block integrity
+- UCPT cascade gossip protocol with exponential fanout
+- Bloom filter deduplication for network efficiency
+- Peer reputation scoring with temporal decay
 
 **Cryptographic Provenance Layer**
 - UCPT token generation using COSE_Sign1 structure
@@ -62,10 +63,12 @@ Production-grade autonomous agent for decentralized economic coordination. Imple
 - Kademlia DHT for peer discovery
 
 **Security Layer**
-- Token bucket rate limiting
+- Token bucket rate limiting with adaptive thresholds
+- Multi-layer spam filtering with pattern matching
 - Input sanitization and injection detection
 - Authentication backoff on failed attempts
-- Comprehensive audit logging
+- Sender reputation tracking with automatic blacklisting
+- Comprehensive audit logging with structured events
 
 ---
 
@@ -181,14 +184,32 @@ Autonomous economic self-sufficiency module. Monitors USDC balance, activates su
 **Earning Advisor**
 LLM-based task selection system. Analyzes multiple task options with risk-adjusted profit calculations, generates structured reasoning for decisions, provides confidence scores for selection quality, and falls back to deterministic selection when unavailable.
 
-**Reputation Engine**
-Persistent requester reputation tracking. Maintains success rate, average payment, and response time metrics per requester. Implements exponential moving average for metric smoothing and configurable minimum reputation thresholds for task acceptance.
+**UCPT Cascade**
+Gossip protocol implementation for distributed UCPT token propagation. Implements exponential fanout with configurable parameters, Bloom filter deduplication, and SQLite-backed caching with TTL expiration and LRU eviction. Supports batch operations and peer selection based on reputation scores.
 
-**UCPT Cache**
-SQLite-backed distributed cache for UCPT tokens. Implements TTL-based expiration, LRU eviction policy, and Bloom filter for fast membership testing. Supports cascade distribution with deduplication and batch operations for network efficiency.
+**UCPT Consensus**
+Proof-of-Work consensus engine for UCPT validation. Implements SHA-256 mining with adjustable difficulty, nonce discovery with configurable iteration limits, and cryptographic verification of computational proofs. Supports parallel validation and difficulty adjustment based on network conditions.
+
+**Spam Filter**
+Multi-layer spam detection system. Implements rate limiting with token bucket algorithm, content-based filtering with pattern matching, sender reputation tracking, and adaptive threshold adjustment. Supports configurable rules and automatic blacklisting.
+
+**Reputation Engine**
+Persistent peer reputation tracking with exponential moving average metrics. Maintains success rate, response time, and contribution quality per peer. Implements decay functions for temporal relevance and configurable thresholds for peer selection.
+
+**UCPT Cascade**
+Gossip protocol implementation for distributed UCPT token propagation. Implements exponential fanout with configurable parameters, Bloom filter deduplication, and SQLite-backed caching with TTL expiration and LRU eviction. Supports batch operations and peer selection based on reputation scores.
+
+**UCPT Consensus**
+Proof-of-Work consensus engine for UCPT validation. Implements SHA-256 mining with adjustable difficulty, nonce discovery with configurable iteration limits, and cryptographic verification of computational proofs. Supports parallel validation and difficulty adjustment based on network conditions.
 
 **UCPT Validator**
 Cryptographic validation engine for UCPT tokens. Verifies COSE_Sign1 structure integrity, validates Ed25519 signatures, checks timestamp freshness, and enforces schema compliance with comprehensive error reporting.
+
+**Spam Filter**
+Multi-layer spam detection system. Implements rate limiting with token bucket algorithm, content-based filtering with pattern matching, sender reputation tracking, and adaptive threshold adjustment. Supports configurable rules and automatic blacklisting.
+
+**Reputation Engine**
+Persistent peer reputation tracking with exponential moving average metrics. Maintains success rate, response time, and contribution quality per peer. Implements decay functions for temporal relevance and configurable thresholds for peer selection.
 
 **Task Executor**
 Production-grade task execution engine with state locking, resource tracking, and malicious payload detection. Delegates to service layer based on task type, generates UCPT proofs with Ed25519 signatures, and handles comprehensive error recovery.
@@ -245,6 +266,8 @@ Content-Type: application/json
 - `a2a.ccc.transfer` - Transfer CCC tokens
 - `a2a.mesh.discover` - Peer discovery
 - `task.execute` - Execute task with UCPT generation
+- `ucpt.cascade` - Propagate UCPT tokens via gossip protocol
+- `ucpt.validate` - Validate UCPT proof-of-work
 
 ### Health Monitoring
 
@@ -283,6 +306,25 @@ MACHINE_ID                    # Unique machine identifier
 ```bash
 CCC_MINING_DIFFICULTY         # PoW difficulty (1-4)
 CCC_MINING_INTENSITY          # LOW, MEDIUM, HIGH
+UCPT_MINING_DIFFICULTY        # UCPT PoW difficulty (1-4, default: 2)
+UCPT_MAX_ITERATIONS           # Maximum mining iterations (default: 1000000)
+```
+
+**Cascade Settings**
+```bash
+UCPT_CASCADE_FANOUT           # Gossip fanout factor (default: 3)
+UCPT_CASCADE_TTL              # Token time-to-live in seconds (default: 3600)
+UCPT_CACHE_MAX_SIZE           # Maximum cache entries (default: 10000)
+BLOOM_FILTER_SIZE             # Bloom filter size in bits (default: 100000)
+BLOOM_FILTER_HASHES           # Number of hash functions (default: 7)
+```
+
+**Security Settings**
+```bash
+SPAM_RATE_LIMIT               # Messages per minute threshold (default: 60)
+SPAM_BURST_LIMIT              # Burst capacity (default: 10)
+MIN_PEER_REPUTATION           # Minimum reputation for peer selection (default: 50)
+REPUTATION_DECAY_RATE         # Temporal decay factor (default: 0.95)
 ```
 
 **Earning Engine Settings**
@@ -363,6 +405,9 @@ The agent tracks:
 - Requester blacklist status and duration
 - Connected peer count and reputation scores
 - UCPT cache hit rate and eviction statistics
+- UCPT cascade propagation metrics and fanout efficiency
+- Spam filter detection rate and false positive rate
+- Peer reputation distribution and decay statistics
 - AI advisor decision confidence and fallback rate
 - Memory and CPU usage
 
@@ -544,6 +589,16 @@ Proprietary. All rights reserved.
 ---
 
 ## Version History
+
+**1.2.8** - UCPT Cascade and Security Layer
+- UCPT cascade gossip protocol with exponential fanout and peer selection
+- Proof-of-Work consensus engine for UCPT validation with adjustable difficulty
+- Multi-layer spam filtering with pattern matching and adaptive thresholds
+- Peer reputation engine with temporal decay and contribution quality tracking
+- Bloom filter deduplication for network efficiency
+- SQLite-backed UCPT cache with TTL expiration and LRU eviction
+- Cryptographic UCPT validator with comprehensive error reporting
+- Mesh network security with sender reputation tracking
 
 **1.2.6** - AI Integration and Distributed Caching
 - LLM-based task selection with structured reasoning and confidence scoring
