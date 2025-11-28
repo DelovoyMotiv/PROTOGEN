@@ -286,3 +286,271 @@ export const oracleService = {
   
   getPrice: async () => 0
 };
+
+// ========== NEW API SERVICES FOR UI ENHANCEMENT ==========
+
+// Cascade Service API
+let cachedCascadeMetrics = {
+  tokens_propagated: 0,
+  tokens_received: 0,
+  bandwidth_bytes: 0,
+  coverage_percentage: 0
+};
+
+let cachedCascadeConfig = {
+  fanout: 3,
+  ttl: 3600,
+  cacheMaxSize: 10000,
+  bloomFilterSize: 100000,
+  bloomFilterHashes: 7
+};
+
+// Update cascade metrics periodically
+setInterval(async () => {
+  try {
+    const metrics = await fetchAPI('/api/cascade/metrics');
+    cachedCascadeMetrics = metrics;
+  } catch (error) {
+    // Silent fail
+  }
+}, 5000);
+
+// Fetch config once on load
+fetchAPI('/api/cascade/config').then(config => {
+  cachedCascadeConfig = config;
+}).catch(() => {});
+
+export const cascadeService = {
+  getMetrics: () => cachedCascadeMetrics,
+  getConfig: () => cachedCascadeConfig,
+  getCascadeMetrics: async () => {
+    try {
+      return await fetchAPI('/api/cascade/metrics');
+    } catch (error) {
+      console.error('[API] getCascadeMetrics error:', error);
+      return cachedCascadeMetrics;
+    }
+  },
+  getCascadeConfig: async () => {
+    try {
+      return await fetchAPI('/api/cascade/config');
+    } catch (error) {
+      console.error('[API] getCascadeConfig error:', error);
+      return cachedCascadeConfig;
+    }
+  }
+};
+
+// Security Service API
+let cachedSecurityStats = {
+  total_peers: 0,
+  banned_peers: 0,
+  high_reputation_peers: 0,
+  low_reputation_peers: 0
+};
+
+// Update security stats periodically
+setInterval(async () => {
+  try {
+    const stats = await fetchAPI('/api/security/stats');
+    cachedSecurityStats = stats;
+  } catch (error) {
+    // Silent fail
+  }
+}, 5000);
+
+export const securityService = {
+  getStats: () => cachedSecurityStats,
+  getSecurityStats: async () => {
+    try {
+      return await fetchAPI('/api/security/stats');
+    } catch (error) {
+      console.error('[API] getSecurityStats error:', error);
+      return cachedSecurityStats;
+    }
+  },
+  getPeerLimits: async (did: string) => {
+    try {
+      return await fetchAPI(`/api/security/peer/${encodeURIComponent(did)}/limits`);
+    } catch (error) {
+      console.error('[API] getPeerLimits error:', error);
+      return {
+        announcements: 0,
+        bandwidth_bytes: 0,
+        last_reset: Math.floor(Date.now() / 1000),
+        invalid_count: 0,
+        quota: 10,
+        isBanned: false
+      };
+    }
+  }
+};
+
+// Reputation Service API
+let cachedRankings: any[] = [];
+
+// Update rankings periodically
+setInterval(async () => {
+  try {
+    const data = await fetchAPI('/api/reputation/rankings');
+    cachedRankings = data.rankings || [];
+  } catch (error) {
+    // Silent fail
+  }
+}, 5000);
+
+export const reputationService = {
+  getRankings: () => cachedRankings,
+  getReputationRankings: async () => {
+    try {
+      const data = await fetchAPI('/api/reputation/rankings');
+      return data.rankings || [];
+    } catch (error) {
+      console.error('[API] getReputationRankings error:', error);
+      return cachedRankings;
+    }
+  },
+  getPeerReputation: async (did: string) => {
+    try {
+      return await fetchAPI(`/api/reputation/peer/${encodeURIComponent(did)}/score`);
+    } catch (error) {
+      console.error('[API] getPeerReputation error:', error);
+      return {
+        overall: 0,
+        success_rate: 0,
+        avg_task_time: 0,
+        total_earned: 0,
+        peer_trust: 0
+      };
+    }
+  }
+};
+
+// Earning Service API
+let cachedEarningStatus = {
+  isActive: false,
+  currentBalance: 0,
+  survivalThreshold: 1.0,
+  safeThreshold: 5.0,
+  consecutiveFailures: 0,
+  lastEarningAttempt: 0,
+  metrics: {
+    totalEarned: 0,
+    tasksCompleted: 0,
+    tasksRejected: 0,
+    averageProfit: 0,
+    successRate: 100,
+    averageExecutionTime: 0
+  },
+  blacklistedRequesters: []
+};
+
+// Update earning status periodically
+setInterval(async () => {
+  try {
+    const status = await fetchAPI('/api/earning/status');
+    cachedEarningStatus = status;
+  } catch (error) {
+    // Silent fail
+  }
+}, 5000);
+
+export const earningService = {
+  getStatus: () => cachedEarningStatus,
+  getEarningStatus: async () => {
+    try {
+      return await fetchAPI('/api/earning/status');
+    } catch (error) {
+      console.error('[API] getEarningStatus error:', error);
+      return cachedEarningStatus;
+    }
+  },
+  getEarningMetrics: async () => {
+    try {
+      return await fetchAPI('/api/earning/metrics');
+    } catch (error) {
+      console.error('[API] getEarningMetrics error:', error);
+      return cachedEarningStatus.metrics;
+    }
+  },
+  getBlacklist: async () => {
+    try {
+      const data = await fetchAPI('/api/earning/blacklist');
+      return data.blacklist || [];
+    } catch (error) {
+      console.error('[API] getBlacklist error:', error);
+      return [];
+    }
+  }
+};
+
+// Consensus Service API (UCPT)
+let cachedConsensusMetrics = {
+  difficulty: 2,
+  tokensValidated: 0,
+  tokensRejected: 0,
+  avgValidationTime: 0,
+  conflictsResolved: 0
+};
+
+// Update consensus metrics periodically
+setInterval(async () => {
+  try {
+    const metrics = await fetchAPI('/api/consensus/metrics');
+    cachedConsensusMetrics = metrics;
+  } catch (error) {
+    // Silent fail
+  }
+}, 5000);
+
+export const consensusServiceAPI = {
+  getMetrics: () => cachedConsensusMetrics,
+  getConsensusMetrics: async () => {
+    try {
+      return await fetchAPI('/api/consensus/metrics');
+    } catch (error) {
+      console.error('[API] getConsensusMetrics error:', error);
+      return cachedConsensusMetrics;
+    }
+  },
+  getConsensusConfig: async () => {
+    try {
+      return await fetchAPI('/api/consensus/config');
+    } catch (error) {
+      console.error('[API] getConsensusConfig error:', error);
+      return {
+        difficulty: 2,
+        maxIterations: 1000000
+      };
+    }
+  }
+};
+
+// Export Service API
+export const exportService = {
+  exportMetrics: async () => {
+    try {
+      const data = await fetchAPI('/api/export/metrics');
+      
+      // Generate filename with timestamp
+      const timestamp = new Date().toISOString().replace(/[:.]/g, '-').split('T');
+      const filename = `metrics-${timestamp[0]}-${timestamp[1].split('-')[0]}.json`;
+      
+      // Create blob and trigger download
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      return { success: true, filename };
+    } catch (error: any) {
+      console.error('[API] exportMetrics error:', error);
+      return { success: false, error: error.message };
+    }
+  }
+};

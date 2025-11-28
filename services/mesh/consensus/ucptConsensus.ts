@@ -407,6 +407,57 @@ export class UCPTConsensus implements IUCPTConsensus {
       avg_resolution_time: 0 // TODO: Track resolution times
     };
   }
+
+  /**
+   * Get consensus metrics for monitoring
+   */
+  public getMetrics(): {
+    difficulty: number;
+    tokensValidated: number;
+    tokensRejected: number;
+    avgValidationTime: number;
+    conflictsResolved: number;
+  } {
+    try {
+      // Get validated tokens count
+      const validatedStmt = this.db.prepare(`
+        SELECT COUNT(*) as count FROM ucpt_cache WHERE status = 'completed'
+      `);
+      const validated = (validatedStmt.get() as any)?.count || 0;
+
+      // Get rejected/disputed tokens count
+      const rejectedStmt = this.db.prepare(`
+        SELECT COUNT(*) as count FROM ucpt_cache WHERE status = 'disputed'
+      `);
+      const rejected = (rejectedStmt.get() as any)?.count || 0;
+
+      // Get resolved conflicts count
+      const conflictsStmt = this.db.prepare(`
+        SELECT COUNT(DISTINCT ucpt_hash) as count FROM peer_votes
+      `);
+      const conflicts = (conflictsStmt.get() as any)?.count || 0;
+
+      // Get difficulty from environment
+      const difficulty = parseInt(process.env.UCPT_MINING_DIFFICULTY || '2');
+
+      return {
+        difficulty,
+        tokensValidated: validated,
+        tokensRejected: rejected,
+        avgValidationTime: 0, // TODO: Track validation times
+        conflictsResolved: conflicts
+      };
+    } catch (error) {
+      console.error('[UCPTConsensus] getMetrics error:', error);
+      return {
+        difficulty: 2,
+        tokensValidated: 0,
+        tokensRejected: 0,
+        avgValidationTime: 0,
+        conflictsResolved: 0
+      };
+    }
+  }
 }
 
 // Singleton instance

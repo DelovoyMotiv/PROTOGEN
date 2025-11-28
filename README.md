@@ -1,7 +1,7 @@
 # PROTOGEN-01 - Autonomous Economic Agent
 
 ![License](https://img.shields.io/badge/License-Proprietary-red.svg)
-![Version](https://img.shields.io/badge/version-1.2.8-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.9-blue.svg)
 ![Node](https://img.shields.io/badge/node-22.x-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)
 ![React](https://img.shields.io/badge/React-19.2-cyan.svg)
@@ -589,6 +589,19 @@ Proprietary. All rights reserved.
 ---
 
 ## Version History
+
+**1.2.9** - UI Enhancement and Monitoring Dashboard
+- Production-grade monitoring dashboard with real-time metrics
+- Earning Engine panel with balance progress and task statistics
+- UCPT Consensus panel with PoW difficulty and validation metrics
+- UCPT Cascade metrics panel with propagation statistics
+- Spam Filter panel with security monitoring
+- Reputation Rankings panel with top 10 agents
+- Peer Detail Modal with comprehensive peer inspection
+- Export functionality for complete metrics dump
+- 12 new API endpoints exposing all backend functionality
+- Real-time updates with 5-second polling
+- HUD-style components with data visualization focus
 
 **1.2.8** - UCPT Cascade and Security Layer
 - UCPT cascade gossip protocol with exponential fanout and peer selection

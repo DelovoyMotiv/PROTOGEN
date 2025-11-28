@@ -25,7 +25,13 @@ import {
   memoryService, 
   cortexService, 
   schedulerService, 
-  oracleService 
+  oracleService,
+  earningService,
+  consensusServiceAPI,
+  cascadeService,
+  securityService,
+  reputationService,
+  exportService
 } from './services/api-client';
 
 // --- UTILITY COMPONENTS ---
@@ -99,6 +105,186 @@ const StatusIndicator = ({ status }: { status: AgentStatus }) => {
   );
 };
 
+// --- NEW DASHBOARD COMPONENTS ---
+
+interface EarningEnginePanelProps {
+  status: any;
+  metrics: any;
+}
+
+const EarningEnginePanel: React.FC<EarningEnginePanelProps> = ({ status, metrics }) => {
+  const progressPercent = status.survivalThreshold > 0 
+    ? Math.min(100, (status.currentBalance / status.safeThreshold) * 100)
+    : 0;
+
+  return (
+    <div className="border border-zinc-800 bg-black/50 flex flex-col">
+      <div className="px-3 py-2 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Coins className="w-3 h-3 text-emerald-500" />
+          <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Earning Engine</span>
+        </div>
+        <div className={`px-2 py-0.5 text-[9px] font-bold font-mono ${
+          status.isActive 
+            ? 'bg-emerald-900/20 text-emerald-500 border border-emerald-900' 
+            : 'bg-zinc-900/20 text-zinc-500 border border-zinc-800'
+        }`}>
+          {status.isActive ? 'ACTIVE' : 'STANDBY'}
+        </div>
+      </div>
+      
+      <div className="p-3 space-y-3">
+        {/* Balance Progress */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-[9px] font-mono text-zinc-500">
+            <span>BALANCE PROGRESS</span>
+            <span className="text-zinc-300">{status.currentBalance.toFixed(4)} / {status.safeThreshold.toFixed(2)} USDC</span>
+          </div>
+          <div className="h-2 bg-zinc-900 border border-zinc-800 overflow-hidden relative">
+            <div 
+              className={`h-full transition-all duration-500 ${
+                progressPercent < 20 ? 'bg-red-600' :
+                progressPercent < 50 ? 'bg-orange-600' :
+                progressPercent < 80 ? 'bg-yellow-600' :
+                'bg-emerald-600'
+              }`}
+              style={{ width: `${progressPercent}%` }}
+            />
+            <div 
+              className="absolute top-0 h-full w-0.5 bg-amber-500"
+              style={{ left: `${(status.survivalThreshold / status.safeThreshold) * 100}%` }}
+            />
+          </div>
+          <div className="flex justify-between text-[8px] font-mono text-zinc-600">
+            <span>SURVIVAL: {status.survivalThreshold.toFixed(2)}</span>
+            <span>SAFE: {status.safeThreshold.toFixed(2)}</span>
+          </div>
+        </div>
+
+        {/* Metrics Grid */}
+        <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">EARNED</div>
+            <div className="text-emerald-400 font-bold">{metrics.totalEarned.toFixed(4)} USDC</div>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">SUCCESS RATE</div>
+            <div className="text-blue-400 font-bold">{metrics.successRate.toFixed(1)}%</div>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">COMPLETED</div>
+            <div className="text-zinc-300 font-bold">{metrics.tasksCompleted}</div>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">REJECTED</div>
+            <div className="text-zinc-300 font-bold">{metrics.tasksRejected}</div>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">AVG PROFIT</div>
+            <div className="text-zinc-300 font-bold">{metrics.averageProfit.toFixed(4)}</div>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">FAILURES</div>
+            <div className={`font-bold ${status.consecutiveFailures > 0 ? 'text-red-400' : 'text-zinc-300'}`}>
+              {status.consecutiveFailures}
+            </div>
+          </div>
+        </div>
+
+        {/* Blacklist */}
+        {status.blacklistedRequesters.length > 0 && (
+          <div className="border border-red-900/50 bg-red-900/10 p-2">
+            <div className="text-[9px] text-red-400 font-mono font-bold mb-1">
+              BLACKLISTED: {status.blacklistedRequesters.length}
+            </div>
+            <div className="text-[8px] text-zinc-500 font-mono">
+              {status.blacklistedRequesters.slice(0, 2).map((did: string) => (
+                <div key={did}>{did.substring(0, 24)}...</div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface UCPTConsensusPanelProps {
+  metrics: any;
+  config: any;
+}
+
+const UCPTConsensusPanel: React.FC<UCPTConsensusPanelProps> = ({ metrics, config }) => {
+  const validationRate = metrics.tokensValidated + metrics.tokensRejected > 0
+    ? (metrics.tokensValidated / (metrics.tokensValidated + metrics.tokensRejected)) * 100
+    : 100;
+
+  return (
+    <div className="border border-zinc-800 bg-black/50 flex flex-col">
+      <div className="px-3 py-2 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <ShieldCheck className="w-3 h-3 text-purple-500" />
+          <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">UCPT Consensus</span>
+        </div>
+        <div className="px-2 py-0.5 text-[9px] font-bold font-mono bg-purple-900/20 text-purple-400 border border-purple-900">
+          PoW ACTIVE
+        </div>
+      </div>
+      
+      <div className="p-3 space-y-3">
+        {/* Difficulty Gauge */}
+        <div className="space-y-1">
+          <div className="flex justify-between text-[9px] font-mono text-zinc-500">
+            <span>DIFFICULTY (LEADING ZEROS)</span>
+            <span className="text-purple-400 font-bold">{config.difficulty}</span>
+          </div>
+          <div className="flex gap-1">
+            {[1, 2, 3, 4].map(level => (
+              <div 
+                key={level}
+                className={`flex-1 h-2 border border-zinc-800 ${
+                  level <= config.difficulty ? 'bg-purple-600' : 'bg-zinc-900'
+                }`}
+              />
+            ))}
+          </div>
+        </div>
+
+        {/* Validation Stats */}
+        <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">VALIDATED</div>
+            <div className="text-emerald-400 font-bold">{metrics.tokensValidated}</div>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">REJECTED</div>
+            <div className="text-red-400 font-bold">{metrics.tokensRejected}</div>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">CONFLICTS</div>
+            <div className="text-orange-400 font-bold">{metrics.conflictsResolved}</div>
+          </div>
+          <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+            <div className="text-zinc-500 mb-1">RATE</div>
+            <div className="text-blue-400 font-bold">{validationRate.toFixed(1)}%</div>
+          </div>
+        </div>
+
+        {/* Validation Rate Bar */}
+        <div className="space-y-1">
+          <div className="text-[9px] font-mono text-zinc-500">VALIDATION SUCCESS RATE</div>
+          <div className="h-1.5 bg-zinc-900 border border-zinc-800 overflow-hidden">
+            <div 
+              className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 transition-all duration-500"
+              style={{ width: `${validationRate}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- DASHBOARD VIEW ---
 
 const DashboardView: React.FC<DashboardProps> = ({ 
@@ -165,6 +351,18 @@ const DashboardView: React.FC<DashboardProps> = ({
            )}
          </button>
       </div>
+    </div>
+
+    {/* New Monitoring Panels Row */}
+    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 shrink-0">
+      <EarningEnginePanel 
+        status={earningService.getStatus()} 
+        metrics={earningService.getStatus().metrics}
+      />
+      <UCPTConsensusPanel 
+        metrics={consensusServiceAPI.getMetrics()}
+        config={{ difficulty: consensusServiceAPI.getMetrics().difficulty, maxIterations: 1000000 }}
+      />
     </div>
 
     {/* Main Data & Logs Split */}
@@ -273,9 +471,255 @@ const DashboardView: React.FC<DashboardProps> = ({
 );
 };
 
+// --- NEW NETWORK COMPONENTS ---
+
+const CascadeMetricsPanel: React.FC = () => {
+  const metrics = cascadeService.getMetrics();
+  const config = cascadeService.getConfig();
+
+  return (
+    <div className="border border-zinc-800 bg-black/50">
+      <div className="px-3 py-2 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
+        <Radio className="w-3 h-3 text-cyan-500" />
+        <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">UCPT Cascade Protocol</span>
+      </div>
+      <div className="p-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+          <div className="text-[9px] text-zinc-500 font-mono mb-1">PROPAGATED</div>
+          <div className="text-lg font-mono font-bold text-cyan-400">{metrics.tokens_propagated}</div>
+        </div>
+        <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+          <div className="text-[9px] text-zinc-500 font-mono mb-1">RECEIVED</div>
+          <div className="text-lg font-mono font-bold text-emerald-400">{metrics.tokens_received}</div>
+        </div>
+        <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+          <div className="text-[9px] text-zinc-500 font-mono mb-1">BANDWIDTH</div>
+          <div className="text-lg font-mono font-bold text-orange-400">{(metrics.bandwidth_bytes / 1024).toFixed(1)}KB</div>
+        </div>
+        <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+          <div className="text-[9px] text-zinc-500 font-mono mb-1">COVERAGE</div>
+          <div className="text-lg font-mono font-bold text-purple-400">{metrics.coverage_percentage.toFixed(1)}%</div>
+        </div>
+      </div>
+      <div className="px-3 pb-3">
+        <div className="text-[9px] text-zinc-600 font-mono">
+          FANOUT: {config.fanout} | TTL: {config.ttl}s | CACHE: {config.cacheMaxSize}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const SpamFilterPanel: React.FC = () => {
+  const stats = securityService.getStats();
+
+  return (
+    <div className="border border-zinc-800 bg-black/50">
+      <div className="px-3 py-2 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
+        <ShieldCheck className="w-3 h-3 text-red-500" />
+        <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Security Monitor</span>
+      </div>
+      <div className="p-3 grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+          <div className="text-[9px] text-zinc-500 font-mono mb-1">TOTAL PEERS</div>
+          <div className="text-lg font-mono font-bold text-zinc-300">{stats.total_peers}</div>
+        </div>
+        <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+          <div className="text-[9px] text-zinc-500 font-mono mb-1">BANNED</div>
+          <div className="text-lg font-mono font-bold text-red-400">{stats.banned_peers}</div>
+        </div>
+        <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+          <div className="text-[9px] text-zinc-500 font-mono mb-1">HIGH REP</div>
+          <div className="text-lg font-mono font-bold text-emerald-400">{stats.high_reputation_peers}</div>
+        </div>
+        <div className="border border-zinc-800 bg-zinc-900/20 p-2">
+          <div className="text-[9px] text-zinc-500 font-mono mb-1">LOW REP</div>
+          <div className="text-lg font-mono font-bold text-amber-400">{stats.low_reputation_peers}</div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const ReputationRankingsPanel: React.FC<{ onPeerClick: (did: string) => void }> = ({ onPeerClick }) => {
+  const rankings = reputationService.getRankings();
+
+  return (
+    <div className="border border-zinc-800 bg-black/50">
+      <div className="px-3 py-2 border-b border-zinc-800 bg-zinc-900/50 flex items-center gap-2">
+        <Activity className="w-3 h-3 text-yellow-500" />
+        <span className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider">Top Agents</span>
+      </div>
+      <div className="p-3">
+        {rankings.length === 0 ? (
+          <div className="text-center text-zinc-600 text-[10px] font-mono py-4">No reputation data available</div>
+        ) : (
+          <div className="space-y-1">
+            {rankings.slice(0, 10).map((agent: any) => (
+              <button
+                key={agent.did}
+                onClick={() => onPeerClick(agent.did)}
+                className="w-full flex items-center gap-2 p-2 border border-zinc-800 bg-zinc-900/20 hover:bg-zinc-900/40 transition-colors text-left"
+              >
+                <div className="w-6 h-6 flex items-center justify-center bg-yellow-900/20 border border-yellow-900 text-yellow-500 text-[10px] font-bold font-mono shrink-0">
+                  #{agent.rank}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="text-[10px] font-mono text-zinc-300 truncate">{agent.did.substring(0, 32)}...</div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <div className="flex-1 h-1 bg-zinc-900 border border-zinc-800 overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-yellow-600 to-yellow-400"
+                        style={{ width: `${Math.min(100, (agent.score / 1000) * 100)}%` }}
+                      />
+                    </div>
+                    <span className="text-[9px] font-mono text-yellow-400 font-bold">{agent.score}</span>
+                  </div>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+interface PeerDetailModalProps {
+  did: string;
+  onClose: () => void;
+}
+
+const PeerDetailModal: React.FC<PeerDetailModalProps> = ({ did, onClose }) => {
+  const [reputation, setReputation] = useState<any>(null);
+  const [limits, setLimits] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [rep, lim] = await Promise.all([
+          reputationService.getPeerReputation(did),
+          securityService.getPeerLimits(did)
+        ]);
+        setReputation(rep);
+        setLimits(lim);
+      } catch (error) {
+        console.error('Failed to fetch peer details:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, [did]);
+
+  return (
+    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-zinc-950 border border-zinc-800 w-full max-w-2xl max-h-full flex flex-col shadow-2xl">
+        <div className="flex items-center justify-between p-4 border-b border-zinc-800 bg-zinc-900">
+          <div className="flex items-center gap-2">
+            <Network className="w-4 h-4 text-cyan-500" />
+            <span className="font-mono font-bold text-zinc-200 text-sm">PEER INSPECTOR</span>
+          </div>
+          <button onClick={onClose} className="text-zinc-500 hover:text-white transition-colors">
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+        
+        <div className="p-4 overflow-auto flex-1 max-h-[70vh] space-y-4">
+          {loading ? (
+            <div className="text-center text-zinc-500 text-sm font-mono py-8">Loading peer data...</div>
+          ) : (
+            <>
+              {/* Identity */}
+              <div className="border border-zinc-800 bg-zinc-900/20 p-3">
+                <div className="text-[10px] text-zinc-500 font-mono mb-2">IDENTITY</div>
+                <div className="text-[10px] font-mono text-zinc-300 break-all">{did}</div>
+              </div>
+
+              {/* Reputation */}
+              {reputation && (
+                <div className="border border-zinc-800 bg-zinc-900/20 p-3">
+                  <div className="text-[10px] text-zinc-500 font-mono mb-3">REPUTATION METRICS</div>
+                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                    <div className="border border-zinc-800 bg-black/50 p-2">
+                      <div className="text-zinc-500 mb-1">OVERALL SCORE</div>
+                      <div className="text-yellow-400 font-bold text-lg">{reputation.overall}</div>
+                    </div>
+                    <div className="border border-zinc-800 bg-black/50 p-2">
+                      <div className="text-zinc-500 mb-1">SUCCESS RATE</div>
+                      <div className="text-emerald-400 font-bold text-lg">{reputation.success_rate.toFixed(1)}%</div>
+                    </div>
+                    <div className="border border-zinc-800 bg-black/50 p-2">
+                      <div className="text-zinc-500 mb-1">AVG TASK TIME</div>
+                      <div className="text-blue-400 font-bold">{reputation.avg_task_time.toFixed(0)}ms</div>
+                    </div>
+                    <div className="border border-zinc-800 bg-black/50 p-2">
+                      <div className="text-zinc-500 mb-1">TOTAL EARNED</div>
+                      <div className="text-purple-400 font-bold">{reputation.total_earned.toFixed(4)}</div>
+                    </div>
+                    <div className="border border-zinc-800 bg-black/50 p-2 col-span-2">
+                      <div className="text-zinc-500 mb-1">PEER TRUST</div>
+                      <div className="flex items-center gap-2">
+                        <div className="flex-1 h-2 bg-zinc-900 border border-zinc-800 overflow-hidden">
+                          <div 
+                            className="h-full bg-gradient-to-r from-cyan-600 to-cyan-400"
+                            style={{ width: `${reputation.peer_trust}%` }}
+                          />
+                        </div>
+                        <span className="text-cyan-400 font-bold">{reputation.peer_trust.toFixed(1)}%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Rate Limits */}
+              {limits && (
+                <div className="border border-zinc-800 bg-zinc-900/20 p-3">
+                  <div className="text-[10px] text-zinc-500 font-mono mb-3">RATE LIMIT STATUS</div>
+                  <div className="grid grid-cols-2 gap-2 text-[10px] font-mono">
+                    <div className="border border-zinc-800 bg-black/50 p-2">
+                      <div className="text-zinc-500 mb-1">ANNOUNCEMENTS</div>
+                      <div className="text-zinc-300 font-bold">{limits.announcements} / {limits.quota}</div>
+                    </div>
+                    <div className="border border-zinc-800 bg-black/50 p-2">
+                      <div className="text-zinc-500 mb-1">BANDWIDTH</div>
+                      <div className="text-zinc-300 font-bold">{(limits.bandwidth_bytes / 1024).toFixed(1)}KB</div>
+                    </div>
+                    <div className="border border-zinc-800 bg-black/50 p-2">
+                      <div className="text-zinc-500 mb-1">INVALID COUNT</div>
+                      <div className={`font-bold ${limits.invalid_count > 0 ? 'text-red-400' : 'text-zinc-300'}`}>
+                        {limits.invalid_count}
+                      </div>
+                    </div>
+                    <div className="border border-zinc-800 bg-black/50 p-2">
+                      <div className="text-zinc-500 mb-1">STATUS</div>
+                      <div className={`font-bold ${limits.isBanned ? 'text-red-400' : 'text-emerald-400'}`}>
+                        {limits.isBanned ? 'BANNED' : 'ACTIVE'}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </>
+          )}
+        </div>
+        
+        <div className="p-2 border-t border-zinc-800 bg-zinc-900 text-center">
+          <span className="text-[9px] text-zinc-500 font-mono">CRYPTOGRAPHIC VERIFICATION VIA ED25519</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // --- NETWORK VIEW ---
 
 const NetworkView: React.FC<NetworkProps> = ({ peers }) => {
+  const [selectedPeer, setSelectedPeer] = useState<string | null>(null);
+
   return (
     <div className="h-full p-4 overflow-auto">
        <div className="mb-4">
@@ -283,18 +727,35 @@ const NetworkView: React.FC<NetworkProps> = ({ peers }) => {
           <div className="text-[10px] text-zinc-500 font-mono">UCPT Protocol / Gossip Cascade</div>
        </div>
   
-       <div className="border border-zinc-800 bg-black p-6">
-          <div className="text-center space-y-4">
-             <Network className="w-12 h-12 text-zinc-700 mx-auto" />
-             <div>
-                <div className="text-2xl font-mono font-bold text-zinc-300">{peers.length}</div>
-                <div className="text-xs text-zinc-500">Connected Peers</div>
-             </div>
-             <div className="text-[10px] text-zinc-600 max-w-md mx-auto">
-                Mesh network discovery and UCPT message propagation. Peers will appear here when discovered through DHT or direct connection.
+       <div className="space-y-4">
+          {/* Cascade Metrics */}
+          <CascadeMetricsPanel />
+          
+          {/* Security Monitor */}
+          <SpamFilterPanel />
+          
+          {/* Reputation Rankings */}
+          <ReputationRankingsPanel onPeerClick={setSelectedPeer} />
+          
+          {/* Connected Peers Summary */}
+          <div className="border border-zinc-800 bg-black p-6">
+             <div className="text-center space-y-4">
+                <Network className="w-12 h-12 text-zinc-700 mx-auto" />
+                <div>
+                   <div className="text-2xl font-mono font-bold text-zinc-300">{peers.length}</div>
+                   <div className="text-xs text-zinc-500">Connected Peers</div>
+                </div>
+                <div className="text-[10px] text-zinc-600 max-w-md mx-auto">
+                   Mesh network discovery and UCPT message propagation. Peers will appear here when discovered through DHT or direct connection.
+                </div>
              </div>
           </div>
        </div>
+
+       {/* Peer Detail Modal */}
+       {selectedPeer && (
+         <PeerDetailModal did={selectedPeer} onClose={() => setSelectedPeer(null)} />
+       )}
     </div>
   );
 };
@@ -739,6 +1200,22 @@ export default function App() {
                <Activity className="w-3 h-3" />
                <span className={fps < 30 ? "text-red-500" : "text-emerald-500"}>{fps} FPS</span>
             </div>
+            
+            <button 
+              onClick={async () => {
+                const result = await exportService.exportMetrics();
+                if (result.success) {
+                  addLog('SUCCESS', 'SYSTEM', `Metrics exported: ${result.filename}`);
+                } else {
+                  addLog('ERROR', 'SYSTEM', `Export failed: ${result.error}`);
+                }
+              }}
+              className="hidden md:flex items-center gap-1 px-2 py-1 border border-zinc-700 hover:border-zinc-600 hover:bg-zinc-900/50 transition-colors text-zinc-400 hover:text-zinc-300"
+              title="Export all metrics to JSON"
+            >
+              <Database className="w-3 h-3" />
+              <span>EXPORT</span>
+            </button>
             
             <StatusIndicator status={status} />
             
