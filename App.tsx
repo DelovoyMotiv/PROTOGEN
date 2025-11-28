@@ -371,7 +371,7 @@ const LedgerView: React.FC<LedgerProps> = ({ tasks }) => {
                                  <h4 className="text-[10px] font-bold text-zinc-500 uppercase">DNS Records (Sample)</h4>
                                  {selectedTask.auditReport.records.A.map((r, i) => (
                                      <div key={i} className="font-mono text-[10px] text-zinc-300 border-l-2 border-zinc-700 pl-2">
-                                         A {r.name} -> {r.data} (TTL: {r.TTL})
+                                         A {r.name} {'->'} {r.data} (TTL: {r.TTL})
                                      </div>
                                  ))}
                                  {selectedTask.auditReport.records.MX.map((r, i) => (

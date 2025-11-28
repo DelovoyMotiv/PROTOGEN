@@ -66,6 +66,9 @@ export class SecureLedger {
       data: task,
       signature,
       version: 1,
+      merkleRoot: hash, // Use block hash as merkle root for single transaction
+      stateRoot: hash,  // Use block hash as state root
+      gasUsed: 0n,      // No gas in current implementation
       confirmations: 0
     };
 

@@ -15,8 +15,6 @@
  */
 
 import { A2AMessage, MeshPeer } from '../types';
-import { sha256 } from '@noble/hashes/sha256';
-import { bytesToHex } from '@noble/hashes/utils';
 
 interface PeerConnection {
   did: string;
@@ -130,8 +128,8 @@ export class MeshService {
         connection.status = 'disconnected';
         connection.ws = null;
 
-        // Attempt reconnection if not failed
-        if (connection.status !== 'failed') {
+        // Attempt reconnection if failure count is low
+        if (connection.failureCount < 3) {
           setTimeout(() => {
             this.reconnectToPeer(did).catch(err => {
               console.error(`[Mesh] Reconnection failed for ${did}:`, err);
@@ -334,8 +332,14 @@ export class MeshService {
    * Convert DID to node ID (SHA-256 hash)
    */
   private didToNodeId(did: string): string {
-    const hash = sha256(new TextEncoder().encode(did));
-    return bytesToHex(hash);
+    // Simple hash function for DID to node ID conversion
+    let hash = 0;
+    for (let i = 0; i < did.length; i++) {
+      const char = did.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash; // Convert to 32bit integer
+    }
+    return Math.abs(hash).toString(16).padStart(64, '0');
   }
 
   /**
@@ -366,6 +370,86 @@ export class MeshService {
         await this.reconnectToPeer(did);
       }
     }
+  }
+
+  /**
+   * Get all peers as MeshPeer array
+   */
+  public getPeers(): MeshPeer[] {
+    return Array.from(this.peers.values()).map(conn => ({
+      nodeId: this.didToNodeId(conn.did),
+      address: conn.endpoint,
+      distance: this.calculateDistance(this.localNodeId, this.didToNodeId(conn.did)),
+      lastSeen: conn.lastSeen,
+      agentVersion: '1.0.0',
+      bucketIndex: 0,
+      latency: 0,
+      reputation: Math.max(0, 100 - conn.failureCount * 10),
+      did: conn.did
+    }));
+  }
+
+  /**
+   * Get local DID
+   */
+  public getSelfId(): string {
+    return this.localDid;
+  }
+
+  /**
+   * Ping a specific peer
+   */
+  public async pingPeer(did: string): Promise<void> {
+    const connection = this.peers.get(did);
+    if (!connection || !connection.ws || connection.status !== 'connected') {
+      throw new Error(`Peer ${did} not connected`);
+    }
+
+    const pingMsg: A2AMessage = {
+      header: {
+        version: '1.0',
+        id: `ping-${Date.now()}`,
+        timestamp: Date.now(),
+        sender_did: this.localDid,
+        recipient_did: did,
+        type: 'PING' as any,
+        nonce: Date.now()
+      },
+      payload: { timestamp: Date.now() },
+      signature: ''
+    };
+
+    connection.ws.send(JSON.stringify(pingMsg));
+    connection.lastSeen = Date.now();
+  }
+
+  /**
+   * Remove a peer from the mesh
+   */
+  public removePeer(did: string): void {
+    const connection = this.peers.get(did);
+    if (connection) {
+      if (connection.ws) {
+        connection.ws.close();
+      }
+      this.peers.delete(did);
+      console.log(`[Mesh] Removed peer ${did.substring(0, 16)}...`);
+    }
+  }
+
+  /**
+   * Simulate DHT lookup (for testing)
+   */
+  public async simulateLookup(targetDid: string): Promise<MeshPeer[]> {
+    const targetNodeId = this.didToNodeId(targetDid);
+    const peers = this.getPeers();
+    
+    // Sort by XOR distance
+    return peers.sort((a, b) => {
+      const distA = this.calculateDistance(this.didToNodeId(a.did), targetNodeId);
+      const distB = this.calculateDistance(this.didToNodeId(b.did), targetNodeId);
+      return distA < distB ? -1 : 1;
+    }).slice(0, 20); // Return closest 20 peers
   }
 }
 
