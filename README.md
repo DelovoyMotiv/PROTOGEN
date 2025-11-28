@@ -1,7 +1,7 @@
 # PROTOGEN-01 - Autonomous Economic Agent
 
 ![License](https://img.shields.io/badge/License-Proprietary-red.svg)
-![Version](https://img.shields.io/badge/version-1.2.5-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.6-blue.svg)
 ![Node](https://img.shields.io/badge/node-22.x-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)
 ![React](https://img.shields.io/badge/React-19.2-cyan.svg)
@@ -12,7 +12,7 @@ Autonomous agent implementing cryptographically verifiable provenance, determini
 
 **Production URL:** 
 
-**Codebase:** 41 files | 7,977 lines
+**Codebase:** 45 files | 9,525 lines
 
 ---
 
@@ -32,6 +32,10 @@ Production-grade autonomous agent for decentralized economic coordination. Imple
 - Risk assessment with three-factor security evaluation
 - UCPT proof generation with Ed25519 signatures for task verification
 - Escrow contract integration for trustless payment settlement
+- AI-powered task selection with LLM reasoning and confidence scoring
+- Reputation-based requester filtering with persistent scoring
+- UCPT cascade distribution with Bloom filter deduplication
+- SQLite-backed caching layer with TTL expiration and LRU eviction
 
 **Blockchain Integration Layer**
 - Native Base L2 support with USDC payment processing
@@ -172,7 +176,19 @@ Agent-to-agent protocol message processing. Validates signatures, routes message
 Cryptographic proof token creation. Generates COSE_Sign1 tokens with Ed25519 signatures for task execution proofs.
 
 **Earning Engine**
-Autonomous economic self-sufficiency module. Monitors USDC balance, activates survival mode when below threshold, discovers and evaluates task offers, executes tasks with resource monitoring, generates cryptographic proofs, claims payments from escrow contracts, and manages requester blacklisting.
+Autonomous economic self-sufficiency module. Monitors USDC balance, activates survival mode when below threshold, discovers and evaluates task offers, executes tasks with resource monitoring, generates cryptographic proofs, claims payments from escrow contracts, and manages requester blacklisting. Integrates AI advisor for multi-task selection with confidence-weighted decision making.
+
+**Earning Advisor**
+LLM-based task selection system. Analyzes multiple task options with risk-adjusted profit calculations, generates structured reasoning for decisions, provides confidence scores for selection quality, and falls back to deterministic selection when unavailable.
+
+**Reputation Engine**
+Persistent requester reputation tracking. Maintains success rate, average payment, and response time metrics per requester. Implements exponential moving average for metric smoothing and configurable minimum reputation thresholds for task acceptance.
+
+**UCPT Cache**
+SQLite-backed distributed cache for UCPT tokens. Implements TTL-based expiration, LRU eviction policy, and Bloom filter for fast membership testing. Supports cascade distribution with deduplication and batch operations for network efficiency.
+
+**UCPT Validator**
+Cryptographic validation engine for UCPT tokens. Verifies COSE_Sign1 structure integrity, validates Ed25519 signatures, checks timestamp freshness, and enforces schema compliance with comprehensive error reporting.
 
 **Task Executor**
 Production-grade task execution engine with state locking, resource tracking, and malicious payload detection. Delegates to service layer based on task type, generates UCPT proofs with Ed25519 signatures, and handles comprehensive error recovery.
@@ -346,6 +362,8 @@ The agent tracks:
 - Resource usage per task execution (CPU time, memory delta)
 - Requester blacklist status and duration
 - Connected peer count and reputation scores
+- UCPT cache hit rate and eviction statistics
+- AI advisor decision confidence and fallback rate
 - Memory and CPU usage
 
 ### Performance
@@ -526,6 +544,16 @@ Proprietary. All rights reserved.
 ---
 
 ## Version History
+
+**1.2.6** - AI Integration and Distributed Caching
+- LLM-based task selection with structured reasoning and confidence scoring
+- Persistent reputation engine with exponential moving average metrics
+- SQLite-backed UCPT cache with TTL expiration and LRU eviction
+- Bloom filter implementation for fast UCPT deduplication
+- UCPT cascade distribution with batch operations
+- Cryptographic UCPT validator with COSE_Sign1 verification
+- Mesh network configuration with capability-based routing
+- Enhanced earning cycle with AI advisor integration
 
 **1.2.5** - Task Execution and Escrow Integration
 - Production-grade task executor with state locking and resource monitoring
