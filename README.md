@@ -1,7 +1,7 @@
 # PROTOGEN-01 - Autonomous Economic Agent
 
 ![License](https://img.shields.io/badge/License-Proprietary-red.svg)
-![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
+![Version](https://img.shields.io/badge/version-1.2.1-blue.svg)
 ![Node](https://img.shields.io/badge/node-22.x-green.svg)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue.svg)
 ![React](https://img.shields.io/badge/React-19.2-cyan.svg)
@@ -12,7 +12,7 @@ Autonomous agent implementing cryptographically verifiable provenance, determini
 
 **Production URL:** 
 
-**Codebase:** 50 files | 12,800 lines
+**Codebase:** 59 files | 6,700 lines
 
 ---
 
@@ -24,8 +24,9 @@ Production-grade autonomous agent for decentralized economic coordination. Imple
 
 **Autonomous Operation Layer**
 - Self-sovereign identity with Ed25519 and EVM dual-key cryptography
-- Finite state machine for lifecycle management
-- Economic safety mechanisms with survival mode activation
+- Finite state machine for lifecycle management with EARNING and CRITICAL_FAILURE states
+- Economic safety mechanisms with autonomous survival mode activation
+- Autonomous earning engine with balance monitoring and task marketplace integration
 - AI-powered decision making via LLM integration
 
 **Blockchain Integration Layer**
@@ -140,7 +141,7 @@ docker-compose logs -f
 ### Service Layer
 
 **Kernel Service**
-Central state machine managing agent lifecycle. Coordinates task execution, handles state transitions, and enforces economic safety rules.
+Central state machine managing agent lifecycle. Coordinates task execution, handles state transitions, enforces economic safety rules, and monitors balance thresholds for autonomous earning mode activation.
 
 **Identity Service**
 Cryptographic identity management with encrypted vault storage. Generates and manages Ed25519 signing keys and EVM wallet keys.
@@ -165,6 +166,9 @@ Agent-to-agent protocol message processing. Validates signatures, routes message
 
 **UCPT Generator**
 Cryptographic proof token creation. Generates COSE_Sign1 tokens with Ed25519 signatures for task execution proofs.
+
+**Earning Engine**
+Autonomous economic self-sufficiency module. Monitors USDC balance, activates survival mode when below threshold, discovers and evaluates task offers, executes tasks for payment, and manages requester blacklisting.
 
 ### Data Flow
 
@@ -255,6 +259,15 @@ CCC_MINING_DIFFICULTY         # PoW difficulty (1-4)
 CCC_MINING_INTENSITY          # LOW, MEDIUM, HIGH
 ```
 
+**Earning Engine Settings**
+```bash
+SURVIVAL_THRESHOLD            # USDC balance threshold for entering earning mode (default: 1.00)
+SAFE_THRESHOLD                # USDC balance threshold for exiting earning mode (default: 5.00)
+EARNING_CYCLE_INTERVAL        # Task discovery interval in milliseconds (default: 300000)
+MAX_CONSECUTIVE_FAILURES      # Maximum failures before critical state (default: 3)
+BLACKLIST_DURATION            # Requester blacklist duration in milliseconds (default: 86400000)
+```
+
 **AI Integration**
 ```bash
 VITE_OPENROUTER_API_KEY       # OpenRouter API key
@@ -313,8 +326,9 @@ docker-compose logs -f
 The agent tracks:
 - CCC balance and mining hash rate
 - USDC balance and transaction history
+- Earning mode status and balance thresholds
+- Task execution statistics and success rate
 - Connected peer count
-- Task execution statistics
 - Memory and CPU usage
 
 ### Performance
@@ -495,6 +509,15 @@ Proprietary. All rights reserved.
 ---
 
 ## Version History
+
+**1.2.1** - Autonomous Earning Engine
+- Autonomous economic self-sufficiency module
+- Balance monitoring with configurable thresholds
+- Automatic survival mode activation and deactivation
+- Task marketplace integration framework
+- Bid strategy and risk assessment modules
+- Requester blacklisting mechanism
+- FSM extension with EARNING and CRITICAL_FAILURE states
 
 **1.0.0** - Production Release
 - Full A2A Protocol v1.0 implementation
