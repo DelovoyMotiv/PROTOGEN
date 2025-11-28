@@ -10,7 +10,7 @@ import { schedulerService } from './scheduler';
 import { executorService } from './executor';
 import { oracleService } from './oracle';
 import { blockchainService } from './blockchain';
-import { earningEngine } from './survival/earningEngine';
+import { earningEngine } from './survival/earningEngineInstance';
 
 // THE KERNEL
 // The Central Nervous System of the AEA.
