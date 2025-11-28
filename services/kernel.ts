@@ -10,6 +10,7 @@ import { schedulerService } from './scheduler';
 import { executorService } from './executor';
 import { oracleService } from './oracle';
 import { blockchainService } from './blockchain';
+import { earningEngine } from './survival/earningEngine';
 
 // THE KERNEL
 // The Central Nervous System of the AEA.
@@ -134,7 +135,7 @@ export class AgentKernel {
 
     // 2. WATCHDOG
     const timeInState = Date.now() - this.stateEntryTime;
-    if (this.status !== AgentStatus.IDLE && this.status !== AgentStatus.SLEEPING && this.status !== AgentStatus.ERROR) {
+    if (this.status !== AgentStatus.IDLE && this.status !== AgentStatus.SLEEPING && this.status !== AgentStatus.ERROR && this.status !== AgentStatus.EARNING) {
         // If stuck in a transient state for > 30s, reset
         if (timeInState > 30000) {
             this.log('WARN', 'KERNEL', `Watchdog Timer Exceeded for state ${this.status}. Resetting to IDLE.`);
@@ -142,7 +143,38 @@ export class AgentKernel {
         }
     }
 
-    // 3. AUTONOMOUS SCHEDULER CHECK
+    // 3. AUTONOMOUS EARNING CHECK
+    if (this.status === AgentStatus.IDLE) {
+        // Check if we should enter earning mode
+        const shouldEarn = await earningEngine.shouldEnterEarningMode();
+        if (shouldEarn) {
+            this.log('WARN', 'ECONOMY', 'SURVIVAL MODE: Balance below threshold. Entering EARNING state.');
+            this.setStatus(AgentStatus.EARNING);
+            await earningEngine.enterEarningMode();
+            return; // Skip other checks this tick
+        }
+    }
+
+    // 4. EARNING MODE MONITORING
+    if (this.status === AgentStatus.EARNING) {
+        // Check for critical failure
+        if (earningEngine.hasCriticalFailure()) {
+            this.log('ERROR', 'ECONOMY', 'CRITICAL FAILURE: Maximum consecutive earning failures reached.');
+            this.setStatus(AgentStatus.CRITICAL_FAILURE);
+            earningEngine.exitEarningMode();
+            return;
+        }
+
+        // Check if we can exit earning mode
+        if (earningEngine.canExitEarningMode()) {
+            this.log('SUCCESS', 'ECONOMY', 'Balance restored. Exiting EARNING state.');
+            earningEngine.exitEarningMode();
+            this.setStatus(AgentStatus.IDLE);
+            return;
+        }
+    }
+
+    // 5. AUTONOMOUS SCHEDULER CHECK
     if (this.status === AgentStatus.IDLE) {
        if (schedulerService.isDue()) {
            this.log('INFO', 'SCHEDULER', 'Mission Schedule Triggered. Initiating Sequence...');
