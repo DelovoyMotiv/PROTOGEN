@@ -1,49 +1,66 @@
 /**
- * Byzantine Consensus Interfaces
+ * UCPT Consensus Module Interfaces
+ * 
+ * Byzantine fault-tolerant voting protocol for conflict resolution.
  */
 
 import { UCPTToken } from '../types';
 
 export interface IUCPTConsensus {
   /**
-   * Detect if two tokens conflict
+   * Detect conflicting UCPT tokens (same task_id, different result)
    */
-  detectConflict(token1: UCPTToken, token2: UCPTToken): boolean;
+  detectConflict(token: UCPTToken): Promise<UCPTToken[]>;
 
   /**
-   * Resolve conflict via Byzantine voting
+   * Initiate Byzantine consensus voting for conflicting tokens
+   * Returns winning token hash
    */
-  resolveConflict(token1: UCPTToken, token2: UCPTToken): Promise<UCPTToken>;
+  resolveConflict(conflictingTokens: UCPTToken[]): Promise<string>;
 
   /**
-   * Query peers for votes on token
+   * Query high-reputation peers for votes
    */
-  queryVotes(token: UCPTToken, peer_count: number): Promise<VoteResult[]>;
+  queryPeersForVotes(tokens: UCPTToken[]): Promise<Map<string, VoteResult>>;
 
   /**
-   * Calculate vote weight based on reputation
+   * Calculate weighted vote totals
    */
-  calculateVoteWeight(reputation: number): number;
+  calculateWeightedVotes(votes: Map<string, VoteResult>): Map<string, number>;
 
   /**
-   * Check if quorum reached
+   * Determine winner based on quorum threshold
    */
-  checkQuorum(votes: VoteResult[], required: number): boolean;
+  determineWinner(weightedVotes: Map<string, number>): string | null;
 
   /**
-   * Mark token as disputed
+   * Mark losing tokens as disputed
    */
-  markDisputed(hash: string): Promise<void>;
+  markAsDisputed(tokenHashes: string[]): Promise<void>;
 
   /**
-   * Mark token as canonical
+   * Penalize issuers of disputed tokens
    */
-  markCanonical(hash: string): Promise<void>;
+  penalizeIssuers(tokenHashes: string[]): Promise<void>;
+
+  /**
+   * Broadcast dispute resolution to mesh
+   */
+  broadcastDispute(winnerHash: string, loserHashes: string[]): Promise<void>;
 }
 
 export interface VoteResult {
+  token_hash: string;
   voter_did: string;
-  vote: boolean;
-  weight: number;
+  vote: boolean; // true = valid, false = invalid
+  weight: number; // reputation-based weight
   timestamp: number;
+}
+
+export interface ConflictResolution {
+  winner_hash: string;
+  loser_hashes: string[];
+  total_votes: number;
+  quorum_reached: boolean;
+  resolution_time: number;
 }

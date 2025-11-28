@@ -656,6 +656,23 @@ export class ConsensusService {
   }
   
   /**
+   * Get entire chain as array of blocks
+   */
+  getChain(): CCCBlock[] {
+    const chain: CCCBlock[] = [];
+    let currentHash = this.chainState.tip;
+    
+    while (currentHash && currentHash !== '0'.repeat(64)) {
+      const block = this.blockCache.get(currentHash);
+      if (!block) break;
+      chain.unshift(block);
+      currentHash = block.previousHash;
+    }
+    
+    return chain;
+  }
+  
+  /**
    * Extract Ed25519 public key from DID
    * DID format: did:key:z<multibase-multicodec-encoded-public-key>
    * 
@@ -802,3 +819,7 @@ export const CCC_CONSTANTS = {
   BLOCK_REWARD,
   MAX_REORG_DEPTH
 };
+
+
+// Singleton instance
+export const consensusService = new ConsensusService();

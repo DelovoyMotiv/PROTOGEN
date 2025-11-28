@@ -1,6 +1,9 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import App from './App';
+
+// Production-ready full-featured app using API client
+// Communicates with backend via HTTP API
+import App from './App-Production';
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {

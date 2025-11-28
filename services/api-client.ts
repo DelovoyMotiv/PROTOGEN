@@ -41,9 +41,12 @@ async function updateCache() {
       fetchAPI('/api/identity'),
       fetchAPI('/api/mesh/peers')
     ]);
-    cachedWallet = wallet;
+    cachedWallet = {
+      ...wallet,
+      balanceCCC: wallet.balanceCCC || 0
+    };
     cachedIdentity = identity;
-    cachedPeers = peersData.peers;
+    cachedPeers = peersData.peers || [];
   } catch (error) {
     console.error('[API] Failed to update cache:', error);
   }
@@ -133,6 +136,17 @@ export const kernel = {
 
 // Economy Service API
 let miningDifficulty = 2;
+let cachedHashRate = 0;
+
+// Update hash rate periodically
+setInterval(async () => {
+  try {
+    const data = await fetchAPI('/api/economy/hashrate');
+    cachedHashRate = data.hashRate || 0;
+  } catch (error) {
+    // Silent fail
+  }
+}, 2000);
 
 export const economyService = {
   getBalance: async () => {
@@ -145,13 +159,9 @@ export const economyService = {
     }
   },
   
-  getHashRate: async () => {
-    try {
-      const data = await fetchAPI('/api/economy/hashrate');
-      return data.hashRate;
-    } catch (error) {
-      return 0;
-    }
+  getHashRate: () => {
+    // Synchronous access to cached hash rate
+    return cachedHashRate;
   },
   
   getMiningDifficulty: () => {
@@ -194,10 +204,22 @@ export const meshService = {
 };
 
 // Memory Service API
+let cachedTasks: any[] = [];
+
+// Update tasks periodically
+setInterval(async () => {
+  try {
+    const data = await fetchAPI('/api/ledger/tasks');
+    cachedTasks = data.tasks || [];
+  } catch (error) {
+    // Silent fail
+  }
+}, 5000);
+
 export const memoryService = {
   getMemoryUsage: () => ({ used: 0, total: 0 }),
   clearCache: () => {},
-  getHistory: () => []
+  getHistory: () => cachedTasks
 };
 
 // Cortex Service API
@@ -222,12 +244,27 @@ export const cortexService = {
 };
 
 // Scheduler Service API
+let cachedSchedulerStatus = {
+  lastRun: Date.now(),
+  nextRun: Date.now() + 300000,
+  intervalMs: 300000,
+  missionTarget: 'aid://anoteroslogos.com/geo-audit',
+  isActive: false
+};
+
+// Update scheduler status periodically
+setInterval(async () => {
+  try {
+    const data = await fetchAPI('/api/scheduler/status');
+    cachedSchedulerStatus = data;
+  } catch (error) {
+    // Silent fail
+  }
+}, 5000);
+
 export const schedulerService = {
-  getStatus: () => ({
-    nextRun: Date.now() + 300000,
-    isScheduled: false
-  }),
-  getNextRun: () => Date.now() + 300000,
+  getStatus: () => cachedSchedulerStatus,
+  getNextRun: () => cachedSchedulerStatus.nextRun,
   schedule: () => {},
   cancel: () => {}
 };

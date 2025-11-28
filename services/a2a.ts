@@ -127,6 +127,10 @@ export class A2AProtocolHandler {
           result = await this.handleMeshCascade(request.params);
           break;
           
+        case 'a2a.ucpt.verify':
+          result = await this.handleUCPTVerify(request.params);
+          break;
+          
         case 'task.execute':
           result = await this.handleTaskExecute(request.params);
           break;
@@ -384,6 +388,47 @@ export class A2AProtocolHandler {
     return {
       accepted: true,
       timestamp: Date.now(),
+    };
+  }
+  
+  /**
+   * Handle a2a.ucpt.verify - Query if peer has and validates a UCPT token
+   */
+  private async handleUCPTVerify(params: any): Promise<unknown> {
+    if (!params?.hash) {
+      throw new Error('Missing required parameter: hash');
+    }
+    
+    // Import cache dynamically to avoid circular dependency
+    const { getUCPTCache } = await import('./mesh/cache/ucptCache');
+    const cache = getUCPTCache();
+    
+    // Check if we have this token
+    const hasToken = await cache.has(params.hash);
+    
+    if (!hasToken) {
+      return {
+        has_token: false,
+        valid: false,
+      };
+    }
+    
+    // Get token and check validation score
+    const token = await cache.get(params.hash);
+    
+    if (!token) {
+      return {
+        has_token: false,
+        valid: false,
+      };
+    }
+    
+    const validationScore = (token.metadata as any).validation_score || 0;
+    
+    return {
+      has_token: true,
+      valid: validationScore >= 50,
+      validation_score: validationScore,
     };
   }
   

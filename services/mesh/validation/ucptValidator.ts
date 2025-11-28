@@ -5,6 +5,7 @@
  */
 
 import * as ed from '@noble/ed25519';
+import * as cbor from 'cbor';
 import { IUCPTValidator } from './interfaces';
 import { UCPTToken, ValidationResult, ConsensusResult } from '../types';
 import { getUCPTCache } from '../cache/ucptCache';
@@ -115,21 +116,54 @@ export class UCPTValidator implements IUCPTValidator {
     let votes_for = 0;
     let votes_against = 0;
 
-    for (const peer of selectedPeers) {
+    // Query each peer via A2A protocol
+    const queryPromises = selectedPeers.map(async (peer) => {
       try {
-        const peerHasToken = false;
-        
-        if (peerHasToken) {
-          votes_for++;
-        } else {
-          votes_against++;
-        }
+        // Create A2A JSON-RPC request
+        const request = {
+          jsonrpc: '2.0' as const,
+          id: `ucpt-verify-${Date.now()}`,
+          method: 'a2a.ucpt.verify',
+          params: { hash }
+        };
+
+        // Send request to peer
+        const message: any = {
+          header: {
+            type: 'request',
+            from: meshService.getSelfId(),
+            to: peer.did,
+            timestamp: Date.now()
+          },
+          payload: request,
+          signature: ''
+        };
+
+        // Send via mesh
+        meshService.send(peer.did, message);
+
+        // Wait for response (with timeout)
+        // TODO: Implement proper request-response pattern with promises
+        // For now, return false (peer doesn't have token)
+        return false;
       } catch (error) {
         console.warn(`[UCPTValidator] Failed to query peer ${peer.did}:`, error);
+        return false;
+      }
+    });
+
+    const results = await Promise.all(queryPromises);
+    
+    // Count votes
+    for (const hasToken of results) {
+      if (hasToken) {
+        votes_for++;
+      } else {
         votes_against++;
       }
     }
 
+    // Byzantine quorum: 2 out of 3 must agree
     const quorum_reached = votes_for >= 2;
 
     return {
@@ -217,22 +251,70 @@ export class UCPTValidator implements IUCPTValidator {
     payload: Uint8Array;
     signature: Uint8Array;
   } {
+    // COSE_Sign1 structure: [protected, unprotected, payload, signature]
+    const decoded = cbor.decode(Buffer.from(coseData)) as Array<any>;
+    
+    if (!Array.isArray(decoded) || decoded.length !== 4) {
+      throw new Error('Invalid COSE_Sign1 structure');
+    }
+
+    const [protectedRaw, _unprotected, payload, signature] = decoded;
+
+    // Protected header is CBOR-encoded
+    const protectedHeader = typeof protectedRaw === 'string' 
+      ? Buffer.from(protectedRaw, 'base64')
+      : Buffer.from(protectedRaw);
+
     return {
-      protected: new Uint8Array(0),
-      payload: new Uint8Array(0),
-      signature: new Uint8Array(0)
+      protected: new Uint8Array(protectedHeader),
+      payload: new Uint8Array(payload),
+      signature: new Uint8Array(signature)
     };
   }
 
   private extractPublicKey(protectedHeader: Uint8Array): string {
-    return '';
+    // Decode CBOR-encoded protected header
+    const header = cbor.decode(Buffer.from(protectedHeader)) as Record<string, any>;
+    
+    // COSE key identifier (kid) contains the public key or DID
+    // Standard COSE header parameter: kid = 4
+    const kid = header[4] || header['kid'];
+    
+    if (!kid) {
+      throw new Error('No key identifier (kid) in protected header');
+    }
+
+    // Convert kid to string (it might be bytes or string)
+    if (typeof kid === 'string') {
+      return kid;
+    } else if (Buffer.isBuffer(kid) || kid instanceof Uint8Array) {
+      return Buffer.from(kid).toString('hex');
+    }
+
+    throw new Error('Invalid kid format in protected header');
   }
 
   private buildSigStructure(
     protectedHeader: Uint8Array,
     payload: Uint8Array
   ): Uint8Array {
-    return new Uint8Array(0);
+    // COSE Sig_structure for Sign1:
+    // Sig_structure = [
+    //   context = "Signature1",
+    //   body_protected = protected header,
+    //   external_aad = empty,
+    //   payload = payload
+    // ]
+    const sigStructure = [
+      'Signature1',
+      protectedHeader,
+      new Uint8Array(0), // empty external_aad
+      payload
+    ];
+
+    // Encode as CBOR
+    const encoded = cbor.encode(sigStructure);
+    return new Uint8Array(encoded);
   }
 
   private selectRandomPeers(peers: any[], count: number): any[] {

@@ -1,52 +1,58 @@
 /**
- * Security and Rate Limiting Interfaces
+ * UCPT Cascade Security Module Interfaces
  */
 
 import { RateLimitState, ProofOfWork } from '../types';
 
 export interface ISpamFilter {
   /**
-   * Check if peer is rate limited
+   * Check if peer is allowed to announce UCPT
+   * Returns true if allowed, false if rate limited
    */
-  checkRateLimit(peer_did: string): Promise<boolean>;
+  checkRateLimit(peerDid: string): Promise<boolean>;
 
   /**
-   * Record announcement from peer
+   * Record UCPT announcement from peer
    */
-  recordAnnouncement(peer_did: string, bytes: number): Promise<void>;
-
-  /**
-   * Record invalid token from peer
-   */
-  recordInvalidToken(peer_did: string): Promise<void>;
+  recordAnnouncement(peerDid: string, bytes: number): Promise<void>;
 
   /**
    * Check if peer is banned
    */
-  isBanned(peer_did: string): Promise<boolean>;
+  isBanned(peerDid: string): Promise<boolean>;
 
   /**
-   * Ban peer for duration
+   * Ban peer for specified duration
    */
-  banPeer(peer_did: string, duration_ms: number): Promise<void>;
+  banPeer(peerDid: string, durationMs: number): Promise<void>;
+
+  /**
+   * Record invalid UCPT from peer
+   */
+  recordInvalidToken(peerDid: string): Promise<void>;
 
   /**
    * Generate proof-of-work challenge
    */
-  generateChallenge(ucpt_hash: string): ProofOfWork;
+  generateChallenge(peerDid: string, ucptHash: string): ProofOfWork;
 
   /**
    * Validate proof-of-work solution
    */
-  validateProof(challenge: ProofOfWork, nonce: string): boolean;
+  validateProofOfWork(challenge: ProofOfWork, nonce: string): boolean;
+
+  /**
+   * Get rate limit quota for peer based on reputation
+   */
+  getQuota(peerDid: string): Promise<number>;
+
+  /**
+   * Reset rate limits (called every minute)
+   */
+  resetRateLimits(): Promise<void>;
 
   /**
    * Get rate limit state for peer
    */
-  getRateLimitState(peer_did: string): Promise<RateLimitState>;
-
-  /**
-   * Reset rate limits (called periodically)
-   */
-  resetRateLimits(): Promise<void>;
+  getRateLimitState(peerDid: string): Promise<RateLimitState>;
 }

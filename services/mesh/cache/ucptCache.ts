@@ -41,31 +41,35 @@ export class UCPTCache implements IUCPTCache {
   }
 
   public async store(token: UCPTToken, peer_id: string): Promise<void> {
-    const stmt = this.db.prepare(`
-      INSERT OR REPLACE INTO ucpt_cache (
-        hash, token_data, issuer_did, subject_did, task_id, task_type,
-        status, issued_at, expires_at, parent_hash, peer_confirmations
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
-        COALESCE((SELECT peer_confirmations FROM ucpt_cache WHERE hash = ?), 0) + 1
-      )
-    `);
+    // Use atomic transaction for storage
+    const transaction = this.db.transaction(() => {
+      const stmt = this.db.prepare(`
+        INSERT OR REPLACE INTO ucpt_cache (
+          hash, token_data, issuer_did, subject_did, task_id, task_type,
+          status, issued_at, expires_at, parent_hash, peer_confirmations
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 
+          COALESCE((SELECT peer_confirmations FROM ucpt_cache WHERE hash = ?), 0) + 1
+        )
+      `);
 
-    const tokenData = Buffer.from(JSON.stringify(token));
+      const tokenData = Buffer.from(JSON.stringify(token));
 
-    stmt.run(
-      token.hash,
-      tokenData,
-      token.metadata.issuer_did,
-      token.metadata.subject_did || null,
-      token.metadata.task_id,
-      token.metadata.task_type,
-      token.metadata.status,
-      token.metadata.issued_at,
-      token.metadata.expires_at || null,
-      token.metadata.parent_hash || null,
-      token.hash
-    );
+      stmt.run(
+        token.hash,
+        tokenData,
+        token.metadata.issuer_did,
+        token.metadata.subject_did || null,
+        token.metadata.task_id,
+        token.metadata.task_type,
+        token.metadata.status,
+        token.metadata.issued_at,
+        token.metadata.expires_at || null,
+        token.metadata.parent_hash || null,
+        token.hash
+      );
+    });
 
+    transaction();
     await this.evictIfNeeded();
   }
 

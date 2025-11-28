@@ -26,6 +26,7 @@ export interface UCPTMetadata {
   issued_at: number;
   expires_at?: number;
   parent_hash?: string;
+  validation_score?: number;
 }
 
 export interface UCPTPayload {

@@ -32,7 +32,11 @@ logs/
 # Development files
 .kiro/
 AUDIT_REPORT.md
+FRONTEND-AUDIT-REPORT.md
+PRODUCTION-DEPLOYMENT.md
 temp_*/
+test-*.js
+test-*.ts
 
 # Editor directories
 .vscode/*

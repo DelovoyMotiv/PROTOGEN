@@ -17,9 +17,27 @@ const WEEK_MS = 7 * 24 * 60 * 60 * 1000;
 
 export class ReputationEngine implements IReputationEngine {
   private db: Database.Database;
+  private decayInterval: NodeJS.Timeout | null = null;
 
   constructor() {
     this.db = new Database(CACHE_DB_PATH);
+    this.startDecayScheduler();
+  }
+
+  private startDecayScheduler(): void {
+    // Run decay every 24 hours
+    this.decayInterval = setInterval(() => {
+      this.applyDecay().catch(err => {
+        console.error('[ReputationEngine] Decay failed:', err);
+      });
+    }, 24 * 60 * 60 * 1000);
+  }
+
+  public stopDecayScheduler(): void {
+    if (this.decayInterval) {
+      clearInterval(this.decayInterval);
+      this.decayInterval = null;
+    }
   }
 
   public async calculateScore(did: string): Promise<ReputationScore> {
@@ -81,6 +99,28 @@ export class ReputationEngine implements IReputationEngine {
 
     const row = stmt.get(peer_id, did) as { opinion: number | null } | undefined;
     return row?.opinion || 0;
+  }
+
+  public async aggregatePeerOpinions(did: string): Promise<number> {
+    const stmt = this.db.prepare(`
+      SELECT AVG(vote * weight) as avg_opinion
+      FROM peer_votes
+      WHERE ucpt_hash IN (
+        SELECT hash FROM ucpt_cache WHERE issuer_did = ?
+      )
+    `);
+
+    const row = stmt.get(did) as { avg_opinion: number | null } | undefined;
+    return row?.avg_opinion || 0;
+  }
+
+  public async recordPeerVote(ucpt_hash: string, voter_did: string, vote: boolean, weight: number): Promise<void> {
+    const stmt = this.db.prepare(`
+      INSERT OR REPLACE INTO peer_votes (ucpt_hash, voter_did, vote, weight)
+      VALUES (?, ?, ?, ?)
+    `);
+
+    stmt.run(ucpt_hash, voter_did, vote ? 1 : 0, weight);
   }
 
   public async updateAfterTask(did: string, success: boolean, earned: number, time_ms: number): Promise<void> {
@@ -149,13 +189,16 @@ export class ReputationEngine implements IReputationEngine {
 
     const row = stmt.get(did) as any;
     
+    // Get cached total_earned and avg_task_time if available
+    const cached = this.getCachedScore(did);
+    
     return {
       successful: row.successful || 0,
       failed: row.failed || 0,
       total: row.total || 0,
       peer_confirmations: row.peer_confirmations || 0,
-      total_earned: 0,
-      avg_task_time: 0
+      total_earned: cached?.total_earned || 0,
+      avg_task_time: cached?.avg_task_time || 0
     };
   }
 

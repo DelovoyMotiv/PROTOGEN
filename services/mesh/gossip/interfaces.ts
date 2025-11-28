@@ -1,5 +1,5 @@
 /**
- * Gossip Protocol Interfaces
+ * UCPT Cascade Gossip Protocol Interfaces
  */
 
 import { UCPTToken, GossipMessage, GossipMetrics } from '../types';
@@ -7,7 +7,7 @@ import { MeshPeer } from '../../../types';
 
 export interface IUCPTCascade {
   /**
-   * Propagate UCPT token to mesh network
+   * Propagate UCPT token to mesh network (push phase)
    */
   propagate(token: UCPTToken): Promise<void>;
 
@@ -19,20 +19,30 @@ export interface IUCPTCascade {
   /**
    * Handle incoming gossip message
    */
-  handleMessage(msg: GossipMessage, from: string): Promise<void>;
+  handleMessage(msg: GossipMessage, fromDid: string): Promise<void>;
 
   /**
-   * Get current gossip metrics
+   * Get gossip metrics
    */
   getMetrics(): GossipMetrics;
 
   /**
-   * Start gossip protocol (periodic tasks)
+   * Start periodic digest broadcast (pull phase)
    */
-  start(): void;
+  startDigestBroadcast(): void;
 
   /**
-   * Stop gossip protocol
+   * Stop periodic digest broadcast
    */
-  stop(): void;
+  stopDigestBroadcast(): void;
+
+  /**
+   * Start anti-entropy synchronization
+   */
+  startAntiEntropy(): void;
+
+  /**
+   * Stop anti-entropy synchronization
+   */
+  stopAntiEntropy(): void;
 }

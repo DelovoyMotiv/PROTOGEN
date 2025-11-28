@@ -21,6 +21,16 @@ export interface IReputationEngine {
   getPeerOpinion(did: string, peer_id: string): Promise<number>;
 
   /**
+   * Aggregate all peer opinions for DID
+   */
+  aggregatePeerOpinions(did: string): Promise<number>;
+
+  /**
+   * Record peer vote for UCPT token
+   */
+  recordPeerVote(ucpt_hash: string, voter_did: string, vote: boolean, weight: number): Promise<void>;
+
+  /**
    * Update reputation after task completion
    */
   updateAfterTask(did: string, success: boolean, earned: number, time_ms: number): Promise<void>;

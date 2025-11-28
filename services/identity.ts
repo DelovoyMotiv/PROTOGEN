@@ -115,10 +115,11 @@ export class IdentityModule {
 
     this.wallet.address = this.identity?.address || this.wallet.address;
     
-    // Load real balance from blockchain
-    if (this.identity?.address) {
-      await this.refreshBalance();
-    }
+    // Skip balance refresh on init to avoid RPC rate limiting
+    // Balance can be refreshed manually via API if needed
+    // if (this.identity?.address) {
+    //   await this.refreshBalance();
+    // }
     
     // Load nonce from persistence (or blockchain)
     const storedNonce = await persistenceService.loadState(STORAGE_KEY_NONCE);
@@ -270,6 +271,10 @@ export class IdentityModule {
   }
 
   public getWalletState(): WalletState {
+    // Ensure wallet address is synced with identity
+    if (this.identity?.address && this.wallet.address !== this.identity.address) {
+      this.wallet.address = this.identity.address;
+    }
     return this.wallet;
   }
 

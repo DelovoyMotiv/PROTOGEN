@@ -308,10 +308,6 @@ export interface DashboardProps {
 
 export interface NetworkProps {
   peers: MeshPeer[];
-  selfId: string;
-  onPing: (nodeId: string) => Promise<void>;
-  onEvict: (nodeId: string) => void;
-  onLookup: (targetId: string) => Promise<LookupStep[]>;
 }
 
 export interface LedgerProps {
