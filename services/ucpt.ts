@@ -16,7 +16,8 @@
  */
 
 import * as ed from '@noble/ed25519';
-import { createHash, randomBytes } from 'crypto';
+import { sha256 } from '@noble/hashes/sha2.js';
+import { randomBytes } from '@noble/hashes/utils.js';
 
 // COSE algorithm identifiers (RFC 9053)
 const COSE_ALG_EDDSA = -8;  // EdDSA with Ed25519
@@ -85,7 +86,9 @@ function canonicalJSON(obj: any): string {
  */
 function hashData(data: any): string {
   const canonical = canonicalJSON(data);
-  return createHash('sha256').update(canonical, 'utf8').digest('hex');
+  const bytes = new TextEncoder().encode(canonical);
+  const hash = sha256(bytes);
+  return Array.from(hash).map((b: number) => b.toString(16).padStart(2, '0')).join('');
 }
 
 /**
@@ -253,7 +256,8 @@ export async function generateUCPT(options: UCPTGenerationOptions): Promise<Seri
   const exp = iat + ttl_seconds;
   
   // Generate unique token ID
-  const jti = Buffer.from(randomBytes(16)).toString('hex');
+  const randomBytesArray = randomBytes(16);
+  const jti = Array.from(randomBytesArray).map((b: number) => b.toString(16).padStart(2, '0')).join('');
   
   // Compute hashes
   const input_hash = hashData(input);
