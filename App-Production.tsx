@@ -305,7 +305,7 @@ const DashboardView: React.FC<DashboardProps> = ({
   const nextRunMinutes = Math.max(0, Math.floor((scheduler.nextRun - Date.now()) / 60000));
 
   return (
-  <div className="h-full grid grid-rows-[auto_1fr] md:grid-rows-[auto_1fr_auto] gap-4 p-4 overflow-hidden">
+  <div className="h-full flex flex-col gap-4 p-4 overflow-hidden">
     
     {/* Telemetry Row */}
     <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 shrink-0">
@@ -366,10 +366,10 @@ const DashboardView: React.FC<DashboardProps> = ({
     </div>
 
     {/* Main Data & Logs Split */}
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 min-h-0">
+    <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
       
       {/* System Logs */}
-      <div className="lg:col-span-2 border border-zinc-800 bg-black flex flex-col min-h-0 order-2 lg:order-1">
+      <div className="lg:col-span-2 border border-zinc-800 bg-black flex flex-col min-h-0 order-2 lg:order-1 h-full">
          <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-zinc-900/50 shrink-0">
             <div className="flex items-center gap-2">
               <TerminalSquare className="w-3 h-3 text-zinc-500" />
@@ -380,10 +380,10 @@ const DashboardView: React.FC<DashboardProps> = ({
                <div className="w-2 h-2 rounded-full bg-zinc-800"></div>
             </div>
          </div>
-         <div className="flex-1 p-3 overflow-y-auto font-mono text-[11px] leading-relaxed space-y-0.5 scrollbar-hide">
+         <div className="flex-1 p-3 overflow-y-auto font-mono text-[11px] leading-relaxed scrollbar-hide min-h-0">
             {logs.length === 0 && <span className="text-zinc-700 italic">Initializing system log...</span>}
             {logs.map((log: LogEntry) => (
-              <div key={log.id} className="flex gap-2 sm:gap-3 hover:bg-zinc-900/50 transition-colors">
+              <div key={log.id} className="flex gap-2 sm:gap-3 hover:bg-zinc-900/50 transition-colors mb-0.5">
                  <span className="text-zinc-600 shrink-0 select-none opacity-50 w-14 sm:w-auto">{log.timestamp}</span>
                  <span className={`shrink-0 w-14 sm:w-16 font-bold ${
                    log.level === 'ERROR' ? 'text-red-500' :
@@ -1142,11 +1142,13 @@ export default function App() {
     return () => clearInterval(interval);
   }, [fetchData, addLog]);
 
-  // Auto-scroll logs
+  // Auto-scroll logs - only scroll within log container, not entire page
   useEffect(() => {
-    const scroll = document.getElementById('log-end');
-    if (scroll && view === 'DASHBOARD') {
-        scroll.scrollIntoView({ behavior: 'smooth' });
+    if (view === 'DASHBOARD') {
+      const logContainer = document.querySelector('.log-container');
+      if (logContainer) {
+        logContainer.scrollTop = logContainer.scrollHeight;
+      }
     }
   }, [logs, view]);
 
