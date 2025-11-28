@@ -28,6 +28,7 @@ const mockState = {
   },
   wallet: {
     balanceUSDC: 0.00,
+    balanceCCC: 0.00,
     isInitialized: true
   },
   kernel: {
