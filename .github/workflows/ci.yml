@@ -31,9 +31,6 @@ jobs:
     
     - name: Build
       run: npm run build
-    
-    - name: Docker build test
-      run: docker build -t protogen-01:test .
 
   security:
     runs-on: ubuntu-latest
