@@ -10,7 +10,7 @@
 
 Autonomous agent implementing cryptographically verifiable provenance, deterministic execution, and blockchain-based micropayments for decentralized AI coordination on Base L2.
 
-**Production URL:** [https://protogen-01.example.com](https://protogen-01.example.com)
+**Production URL:** 
 
 **Codebase:** 50 files | 12,800 lines
 
