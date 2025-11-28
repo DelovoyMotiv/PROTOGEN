@@ -25,13 +25,7 @@
         font-family: 'JetBrains Mono', monospace;
       }
 
-      /* Technical Grid Background */
-      .bg-grid-pattern {
-        background-size: 40px 40px;
-        background-image: linear-gradient(to right, #18181b 1px, transparent 1px),
-                          linear-gradient(to bottom, #18181b 1px, transparent 1px);
-        mask-image: linear-gradient(to bottom, black 40%, transparent 100%);
-      }
+      /* Technical Grid Background - REMOVED for better readability */
 
       /* Custom Scrollbar - Slim & Mechanical */
       ::-webkit-scrollbar {
@@ -71,7 +65,7 @@
 </script>
 <link rel="stylesheet" href="/index.css">
 </head>
-  <body class="bg-grid-pattern min-h-screen">
+  <body class="min-h-screen">
     <div id="root" class="h-screen w-full flex flex-col"></div>
   <script type="module" src="/index.tsx"></script>
 </body>
