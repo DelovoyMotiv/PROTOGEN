@@ -13,15 +13,15 @@ RUN apk add --no-cache python3 make g++ git
 COPY package*.json ./
 COPY tsconfig.json ./
 
-# Install dependencies
-RUN npm ci --only=production && \
+# Install all dependencies (including devDependencies for build)
+RUN npm ci && \
     npm cache clean --force
 
 # Copy source code
 COPY . .
 
-# Build TypeScript (if needed for production)
-# RUN npm run build
+# Build production bundle with Vite
+RUN npm run build
 
 # Stage 2: Production
 FROM node:22-alpine
@@ -30,14 +30,15 @@ FROM node:22-alpine
 RUN apk add --no-cache \
     ca-certificates \
     dumb-init \
-    && addgroup -g 1000 protogen \
-    && adduser -D -u 1000 -G protogen protogen
+    && addgroup -S protogen \
+    && adduser -D -S -G protogen protogen
 
 WORKDIR /app
 
 # Copy from builder
 COPY --from=builder --chown=protogen:protogen /app/node_modules ./node_modules
 COPY --from=builder --chown=protogen:protogen /app/package*.json ./
+COPY --from=builder --chown=protogen:protogen /app/dist ./dist
 COPY --chown=protogen:protogen . .
 
 # Create data directory with correct permissions
