@@ -6,6 +6,8 @@ export enum AgentStatus {
   NEGOTIATING = "NEGOTIATING", // Economic logic
   WORKING = "WORKING",       // Task execution
   SETTLING = "SETTLING",     // Blockchain tx
+  EARNING = "EARNING",       // Autonomous earning mode
+  CRITICAL_FAILURE = "CRITICAL_FAILURE", // Earning failures exceeded threshold
   ERROR = "ERROR",
   SLEEPING = "SLEEPING"
 }
