@@ -369,7 +369,7 @@ const DashboardView: React.FC<DashboardProps> = ({
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 flex-1 min-h-0">
       
       {/* System Logs */}
-      <div className="lg:col-span-2 border border-zinc-800 bg-black flex flex-col min-h-0 order-2 lg:order-1 h-full">
+      <div className="lg:col-span-2 border border-zinc-800 bg-black flex flex-col order-2 lg:order-1 h-full">
          <div className="flex items-center justify-between px-3 py-2 border-b border-zinc-800 bg-zinc-900/50 shrink-0">
             <div className="flex items-center gap-2">
               <TerminalSquare className="w-3 h-3 text-zinc-500" />
